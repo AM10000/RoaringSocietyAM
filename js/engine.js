@@ -20,22 +20,47 @@ function emojiTex(e){if(emojiCache[e])return emojiCache[e];
 function icon(e,size){const m=new THREE.SpriteMaterial({map:emojiTex(e),transparent:true,alphaTest:.3,depthWrite:true});const s=new THREE.Sprite(m);s.scale.set(size||.55,size||.55,1);return s}
 
 /* ---------- artwork paintings ---------- */
-const AW=64,AH=47;
+const AW=128,AH=94;
 const art=S.art=[];
+function wrap(x,text,maxW,maxLines){const w=String(text||'').split(' ');const L=[];let cur='';w.forEach(t=>{const n=cur?cur+' '+t:t;if(x.measureText(n).width>maxW&&cur){L.push(cur);cur=t}else cur=n});if(cur)L.push(cur);return L.slice(0,maxLines)}
+/* readable stand-in shown until (or instead of) the real archive image */
+function placeholder(x,a){
+ const T=a.type||'document',ink='#2b2013';x.textAlign='center';x.textBaseline='alphabetic';
+ const title=RS.strip?RS.strip(a.title):a.title;
+ const lines=(y0,n,x0,x1,col)=>{x.fillStyle=col||'#8b7d5f';for(let k=0;k<n;k++){const ww=(x1-x0)*(k%3===2?.6:1);x.fillRect(x0,y0+k*4,ww,1)}};
+ if(T==='newspaper'||T==='article'||T==='ad'){x.fillStyle='#e6dcc0';x.fillRect(0,0,AW,AH);x.fillStyle=ink;x.font='bold 11px serif';x.fillText('THE DAILY '+(a.date||'').slice(0,4),AW/2,14);x.fillRect(6,17,AW-12,1);x.fillRect(6,19,AW-12,1);
+  x.font='bold 9px serif';wrap(x,title.toUpperCase(),AW-14,3).forEach((l,k)=>x.fillText(l,AW/2,32+k*10));lines(64,6,8,60);lines(64,6,68,AW-8);x.fillStyle='#b9ab88';x.fillRect(8,AH-14,52,8)}
+ else if(T==='photo'||T==='portrait'||T==='evidence'){const g=x.createLinearGradient(0,0,0,AH);g.addColorStop(0,'#9d8d72');g.addColorStop(1,'#4a3f2d');x.fillStyle=g;x.fillRect(0,0,AW,AH);
+  x.fillStyle='#3a3124';if(T==='portrait'){x.beginPath();x.arc(AW/2,38,15,0,7);x.fill();x.fillRect(AW/2-26,56,52,40)}else{for(let k=0;k<7;k++){const h=18+((k*37)%26);x.fillRect(k*19-4,AH-h-14,16,h)}x.beginPath();x.arc(98,22,7,0,7);x.fillStyle='#d6c79f';x.fill()}
+  x.fillStyle='rgba(20,14,6,.78)';x.fillRect(0,AH-24,AW,24);x.fillStyle='#f3e4bf';x.font='bold 8px sans-serif';wrap(x,title,AW-10,2).forEach((l,k)=>x.fillText(l,AW/2,AH-13+k*9))}
+ else if(T==='map'){x.fillStyle='#d9cfa8';x.fillRect(0,0,AW,AH);x.fillStyle='#7fa6b8';x.fillRect(0,0,AW,AH);x.fillStyle='#a9b57d';x.beginPath();x.moveTo(14,26);x.lineTo(60,12);x.lineTo(100,30);x.lineTo(112,60);x.lineTo(70,80);x.lineTo(24,66);x.closePath();x.fill();x.strokeStyle='#6b5a3a';x.setLineDash([3,3]);x.beginPath();x.moveTo(30,60);x.lineTo(60,40);x.lineTo(96,30);x.stroke();x.setLineDash([]);
+  x.fillStyle='rgba(20,14,6,.78)';x.fillRect(0,AH-20,AW,20);x.fillStyle='#f3e4bf';x.font='bold 8px sans-serif';wrap(x,title,AW-10,2).forEach((l,k)=>x.fillText(l,AW/2,AH-10+k*8-(l?0:0)))}
+ else if(T==='chart'){x.fillStyle='#efe6cc';x.fillRect(0,0,AW,AH);x.fillStyle=ink;x.font='bold 8px sans-serif';wrap(x,title,AW-10,2).forEach((l,k)=>x.fillText(l,AW/2,12+k*9));x.fillRect(12,70,AW-24,1);x.fillRect(12,28,1,42);['#9b2335','#4a6a9b','#d99a1e','#3f7d4e','#9b2335','#4a6a9b'].forEach((c,k)=>{x.fillStyle=c;const h=12+((k*29)%28);x.fillRect(18+k*16,70-h,11,h)})}
+ else if(T==='poster'||T==='cartoon'||T==='diagram'){x.fillStyle='#d9b45a';x.fillRect(0,0,AW,AH);x.fillStyle='#8c2f39';x.fillRect(5,5,AW-10,AH-10);x.fillStyle='#f3e4bf';x.fillRect(8,8,AW-16,AH-16);x.fillStyle='#8c2f39';x.font='bold 10px serif';wrap(x,title.toUpperCase(),AW-24,4).forEach((l,k)=>x.fillText(l,AW/2,26+k*12))}
+ else{x.fillStyle='#ece2c6';x.fillRect(0,0,AW,AH);x.fillStyle='#d4c8a4';x.fillRect(0,0,AW,3);x.fillStyle=ink;x.font='bold 9px serif';wrap(x,title,AW-20,3).forEach((l,k)=>x.fillText(l,AW/2,18+k*10));x.fillRect(20,44,AW-40,1);lines(50,7,14,AW-14);x.fillStyle='#8c2f39';x.beginPath();x.arc(AW-22,AH-14,6,0,7);x.fill()}
+ x.font='bold 7px sans-serif';x.fillStyle='rgba(43,32,19,.55)';x.textAlign='right';if(a.date)x.fillText(a.date,AW-4,AH-3);
+}
 function paintArt(i){
  const a=D.A[i],o=art[i];const x=o.ctx;
- x.imageSmoothingEnabled=true;x.fillStyle='#e9dcc0';x.fillRect(0,0,AW,AH);
+ x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.fillStyle='#e9dcc0';x.fillRect(0,0,AW,AH);
  if(o.img){const im=o.img,ar=im.width/im.height,w=AW,h=AH;let sx=0,sy=0,sw=im.width,sh=im.height;if(ar>w/h){sw=im.height*w/h;sx=(im.width-sw)/2}else{sh=im.width*h/w;sy=(im.height-sh)/2}x.drawImage(im,sx,sy,sw,sh,0,0,w,h)}
- else{x.fillStyle='#cdbb94';x.fillRect(0,0,AW,AH);x.fillStyle='#9b8b6a';x.fillRect(22,12,20,16);x.fillStyle='#e9dcc0';x.fillRect(24,14,16,12);x.fillStyle='#9b8b6a';for(let k=0;k<4;k++)x.fillRect(26,16+k*3,12,1);
-  x.fillStyle='#6b5a3a';x.font='bold 7px monospace';x.textAlign='center';x.fillText((a.type||'').toUpperCase().slice(0,12),32,40)}
- if(RS.S.seen.includes(a.id)){x.fillStyle='#2ecc71';x.fillRect(AW-11,AH-11,10,10);x.fillStyle='#fff';x.fillRect(AW-8,AH-6,1,2);x.fillRect(AW-7,AH-5,1,2);x.fillRect(AW-6,AH-7,1,3);x.fillRect(AW-5,AH-8,1,2)}
+ else placeholder(x,a);
+ if(RS.S.seen.includes(a.id)){x.fillStyle='#2ecc71';x.fillRect(AW-14,AH-14,12,12);x.fillStyle='#fff';x.fillRect(AW-11,AH-8,2,2);x.fillRect(AW-9,AH-6,2,2);x.fillRect(AW-7,AH-10,2,5)}
  o.tex.needsUpdate=true;
 }
-const thumbReq={};
+const thumbReq={},thumbUrl={};
+function loadImg(i,url,fallback){const im=new Image();im.crossOrigin='anonymous';im.onload=()=>{art[i].img=im;paintArt(i)};im.onerror=()=>{if(fallback)loadImg(i,fallback)};im.src=url}
 E.loadGallery=function(g){
  if(thumbReq[g])return;thumbReq[g]=1;
- D.A.forEach((a,i)=>{if(a.g!==g||!a.f||!a.f[0]||!art[i])return;
-  const im=new Image();im.crossOrigin='anonymous';im.onload=()=>{art[i].img=im;paintArt(i)};im.src=RS.fileUrl(a.f[0],220)});
+ const list=[];D.A.forEach((a,i)=>{if(a.g===g&&a.f&&a.f[0]&&art[i])list.push([i,a.f[0]])});if(!list.length)return;
+ const direct=f=>RS.fileUrl(f,330);
+ // ask the Commons API for real thumbnail URLs (served with CORS headers), fall back to Special:FilePath
+ const titles=list.map(l=>'File:'+l[1].replace(/_/g,' ')).join('|');
+ fetch('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=imageinfo&iiprop=url&iiurlwidth=330&titles='+encodeURIComponent(titles))
+  .then(r=>r.json()).then(j=>{const by={};const norm={};((j.query&&j.query.normalized)||[]).forEach(n=>norm[n.from]=n.to);
+   Object.values((j.query&&j.query.pages)||{}).forEach(p=>{if(p.imageinfo&&p.imageinfo[0])by[p.title]=p.imageinfo[0].thumburl||p.imageinfo[0].url});
+   list.forEach(([i,f])=>{const t='File:'+f.replace(/_/g,' ');const u=by[norm[t]||t];loadImg(i,u||direct(f),u?direct(f):null)})})
+  .catch(()=>list.forEach(([i,f])=>loadImg(i,direct(f))));
 };
 E.refreshSeen=()=>{art.forEach((o,i)=>{if(o)paintArt(i)})};
 
@@ -60,7 +85,7 @@ E.build=function(){
  // paintings
  Object.values(W.artSpots).forEach(sp=>{
   const i=sp.i;const c=document.createElement('canvas');c.width=AW;c.height=AH;const ctx=c.getContext('2d',{willReadFrequently:true});
-  const tex=nearest(new THREE.CanvasTexture(c));art[i]={canvas:c,ctx,tex,img:null};
+  const tex=new THREE.CanvasTexture(c);tex.magFilter=tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;art[i]={canvas:c,ctx,tex,img:null};
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(sp.w,sp.h),new THREE.MeshBasicMaterial({map:tex,color:new THREE.Color(sp.light*.98,sp.light*.98,sp.light*.98)}));
   const off=.03;mesh.position.set(sp.x+sp.nx*off,sp.z,sp.y+sp.ny*off);
   mesh.rotation.y=sp.nx===1?Math.PI/2:sp.nx===-1?-Math.PI/2:sp.ny===1?0:Math.PI;scene.add(mesh);paintArt(i);
@@ -79,21 +104,23 @@ E.build=function(){
  {const c=document.createElement('canvas');c.width=128;c.height=20;const x=c.getContext('2d');x.fillStyle='#1b140c';x.fillRect(0,0,128,20);x.fillStyle='#d4af37';x.fillRect(1,1,126,18);x.fillStyle='#1b140c';x.fillRect(3,3,122,14);x.fillStyle='#f3d98a';x.font='bold 10px monospace';x.textAlign='center';x.fillText('THE ROARING SOCIETY',64,14);
   const m=new THREE.Mesh(new THREE.PlaneGeometry(5.6,.88),new THREE.MeshBasicMaterial({map:nearest(new THREE.CanvasTexture(c))}));m.position.set(30,4.55,60.05);scene.add(m);}
  // door leaves
- S.doors=[];const leafGeo=W.boxGeo(.98,3.3,.08,'door',.95);
+ S.doors=[];const leafGeo=W.boxGeo(.86,3.28,.08,'door',.95);
  W.doorways.forEach(d=>{
-  const mk=(hx,hy,thC,thO)=>{const g=new THREE.Group();g.position.set(hx,0,hy);const m=new THREE.Mesh(leafGeo,S.mat);m.position.set(.5,1.65,0);g.add(m);scene.add(g);return {g,c:thC,o:thO,t:0}};
+  const mk=(hx,hy,thC,thO)=>{const g=new THREE.Group();g.position.set(hx,0,hy);const m=new THREE.Mesh(leafGeo,S.mat);m.position.set(.43,1.64,0);g.add(m);scene.add(g);return {g,c:thC,o:thO,t:0}};
   let la,lb;
-  if(d.along==='y'){la=mk(d.cx,d.cy-1,Math.PI/2,0);lb=mk(d.cx,d.cy+1,-Math.PI/2,0)}
-  else{la=mk(d.cx-1,d.cy,0,Math.PI/2);lb=mk(d.cx+1,d.cy,Math.PI,Math.PI/2)}
+  if(d.along==='y'){la=mk(d.cx,d.cy-.88,Math.PI/2,0);lb=mk(d.cx,d.cy+.88,-Math.PI/2,0)}
+  else{la=mk(d.cx-.88,d.cy,0,Math.PI/2);lb=mk(d.cx+.88,d.cy,Math.PI,Math.PI/2)}
   [la,lb].forEach(l=>{l.g.rotation.y=-l.c});
   S.doors.push({cx:d.cx,cy:d.cy,a:la,b:lb,open:0,front:d.cx===30&&d.cy===59.5});
  });
- // secret doors
+ // secret doors: flush, hinged panels dressed as part of each hall (plate, cabinet, trunk, bookcase, cask rack, library shelves, vault door)
  S.secret={};
- const panelGeo=W.boxGeo(.08,3.0,.94,'secret',.9);
+ const DISGUISE={1:['wains_1','plate19'],2:['cabinet','cabinet'],3:['trunk','trunk'],4:['wains_6','wall_6'],5:['cask','cask'],6:['wains_6','wall_6'],7:['vaultdoor','vaultdoor']};
  for(const g in W.secretDoor){const d=W.secretDoor[g];
-  const grp=new THREE.Group();grp.position.set(d.x+.5,0,d.y+.03);const m=new THREE.Mesh(panelGeo,S.mat);m.position.set(0,1.5,.47);grp.add(m);scene.add(grp);
-  const solid=W.addSolid({x0:d.x,x1:d.x+1,y0:d.y,y1:d.y+1,b:0,t:3.0,kind:'wall'});
+  const grp=new THREE.Group();grp.position.set(d.x+1-.045,0,d.y+.02);
+  (DISGUISE[g]||['wains_'+g,'wall_'+g]).forEach((t,k)=>{const m=new THREE.Mesh(W.boxGeo(.09,1,.96,t,W.lightAt(d.x+1.5,d.y+.5,1)),S.mat);m.position.set(0,.5+k,.48);grp.add(m)});
+  scene.add(grp);
+  const solid=W.addSolid({x0:d.x,x1:d.x+1,y0:d.y,y1:d.y+1,b:0,t:W.H.sdoor,kind:'wall'});
   S.secret[g]={grp,solid,p:0,open:false};
  }
  // entities
@@ -124,7 +151,7 @@ function buildEntities(){
   const s=addSprite({id:'docent'+d.g,kind:'docent',gal:d.g,x:d.x,y:d.y,label:d.label,solid:true,r:.3,pick:.55,zc:1.0,talk:0,model:m,face:Math.PI/2});
   W.addSolid({x0:d.x-.3,x1:d.x+.3,y0:d.y-.3,y1:d.y+.3,b:0,t:1.8,kind:'npc'});
  });
- {const c=ex.clerk;const m=NPC.make(NPC.PALS[4],{hat:'#222',seed:77});scene.add(m);m.position.set(c.x,0,c.y);
+ {const c=ex.clerk;const m=NPC.make(NPC.PALS[4],{hat:'#222',seed:77,role:'clerk'});scene.add(m);m.position.set(c.x,0,c.y);
   addSprite({id:'bartender',kind:'npc-talk',gal:5,x:c.x,y:c.y,label:'Cigar-shop clerk',solid:true,pick:.55,zc:1.0,model:m,face:Math.PI/2});
   W.addSolid({x0:c.x-.3,x1:c.x+.3,y0:c.y-.3,y1:c.y+.3,b:0,t:1.8,kind:'npc'})}
  // wandering visitors

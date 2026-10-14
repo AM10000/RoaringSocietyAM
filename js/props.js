@@ -33,15 +33,15 @@ P.bench=function(ch,cx,cy,facing,len,opts){
  const n=Math.max(1,Math.floor(len/.9));
  for(let k=0;k<n;k++){const off=(k+.5)*len/n-len/2;seat(alongX?cx+off:cx,alongX?cy:cy+off,.5,facing,'Sit on the bench')}
 };
-P.chair=function(ch,cx,cy,facing,tile){
- tile=tile||'wood_dark';const s=.46;const x0=cx-s/2,x1=cx+s/2,y0=cy-s/2,y1=cy+s/2;
- W.box(ch,x0,y0,.42,x1,y1,.5,{top:'cloth_red',side:tile,bot:tile},{solid:false});
- [[x0,y0],[x1-.06,y0],[x0,y1-.06],[x1-.06,y1-.06]].forEach(l=>W.box(ch,l[0],l[1],0,l[0]+.06,l[1]+.06,.42,tile,{solid:false}));
+P.chair=function(ch,cx,cy,facing,tile,z0){
+ tile=tile||'wood_dark';z0=z0||0;const s=.46;const x0=cx-s/2,x1=cx+s/2,y0=cy-s/2,y1=cy+s/2;
+ W.box(ch,x0,y0,z0+.42,x1,y1,z0+.5,{top:'cloth_red',side:tile,bot:tile},{solid:false});
+ [[x0,y0],[x1-.06,y0],[x0,y1-.06],[x1-.06,y1-.06]].forEach(l=>W.box(ch,l[0],l[1],z0,l[0]+.06,l[1]+.06,z0+.42,tile,{solid:false,noBot:true}));
  const bk=.06;let b0x=x0,b1x=x1,b0y=y0,b1y=y1;
  if(facing==='N'){b0y=y1-bk}else if(facing==='S'){b1y=y0+bk}else if(facing==='E'){b1x=x0+bk}else{b0x=x1-bk}
- W.box(ch,b0x,b0y,.5,b1x,b1y,1.0,{all:tile},{solid:false});
- W.addSolid({x0,x1,y0,y1,b:0,t:.5,kind:'seat'});
- seat(cx,cy,.5,facing,'Sit on the chair');
+ W.box(ch,b0x,b0y,z0+.5,b1x,b1y,z0+1.0,{all:tile},{solid:false});
+ W.addSolid({x0,x1,y0,y1,b:z0,t:z0+.5,kind:'seat'});
+ seat(cx,cy,z0+.5,facing,'Sit on the chair');
 };
 P.table=function(ch,x0,y0,x1,y1,h,tile,top){
  h=h||.76;tile=tile||'wood';const t=.07;
@@ -73,14 +73,17 @@ P.chandeliers=function(g){
  [[2,10],[10,2],[17,10],[10,17]].forEach(([lx,ly])=>{const x=ox+lx+.5,y=oy+ly+.5;W.box(g,x-.12,y-.12,4.1,x+.12,y+.12,4.4,'lamp',{solid:false,light:1.15});W.box(g,x-.015,y-.015,4.4,x+.015,y+.015,H.slabB,'iron',{solid:false})});
 };
 P.doorFrames=function(){
+ // jambs sit just inside the opening (never flush with the wall's own door-side face) and stand proud of the wall by .07 on both sides
+ const J=.12;
  W.doorways.forEach(d=>{
-  const ch=W.blockAt(Math.floor(d.cx),Math.floor(d.cy));const chId=ch;const t=d.thick+.14,hw=1;
-  if(d.along==='y'){ // wall plane is x = cx, opening runs along y
-   [[d.cy-hw-.14,d.cy-hw],[d.cy+hw,d.cy+hw+.14]].forEach(([a,b])=>W.box(chId,d.cx-t/2,a,0,d.cx+t/2,b,H.door,{all:'doorframe',top:'doorframe'},{solid:false,light:.9}));
-   W.box(chId,d.cx-t/2,d.cy-hw-.14,H.door-.16,d.cx+t/2,d.cy+hw+.14,H.door,{all:'doorframe'},{solid:false,light:.9});
+  const chId=W.blockAt(Math.floor(d.cx),Math.floor(d.cy));const t=d.thick+.14,hw=1;
+  const tl={all:'doorframe',top:'doorframe'},o={solid:false,light:.9};
+  if(d.along==='y'){
+   W.box(chId,d.cx-t/2,d.cy-hw,0,d.cx+t/2,d.cy-hw+J,H.door,tl,o);W.box(chId,d.cx-t/2,d.cy+hw-J,0,d.cx+t/2,d.cy+hw,H.door,tl,o);
+   W.box(chId,d.cx-t/2,d.cy-hw+J,H.door-.16,d.cx+t/2,d.cy+hw-J,H.door,{all:'doorframe',top:'doorframe',bot:'beam'},o);
   }else{
-   [[d.cx-hw-.14,d.cx-hw],[d.cx+hw,d.cx+hw+.14]].forEach(([a,b])=>W.box(chId,a,d.cy-t/2,0,b,d.cy+t/2,H.door,{all:'doorframe',top:'doorframe'},{solid:false,light:.9}));
-   W.box(chId,d.cx-hw-.14,d.cy-t/2,H.door-.16,d.cx+hw+.14,d.cy+t/2,H.door,{all:'doorframe'},{solid:false,light:.9});
+   W.box(chId,d.cx-hw,d.cy-t/2,0,d.cx-hw+J,d.cy+t/2,H.door,tl,o);W.box(chId,d.cx+hw-J,d.cy-t/2,0,d.cx+hw,d.cy+t/2,H.door,tl,o);
+   W.box(chId,d.cx-hw+J,d.cy-t/2,H.door-.16,d.cx+hw-J,d.cy+t/2,H.door,{all:'doorframe',top:'doorframe',bot:'beam'},o);
   }
  });
 };
@@ -93,7 +96,7 @@ P.stairs=function(g){
   const y0=oy+11+RUN*(k-1),y1=oy+11+RUN*k,top=RISE*k;
   W.box(g,ox+17,y0,0,ox+19,y1,top,{top:'stair_top',side:'stair_riser',n:'stair_riser',s:'stair_riser'},{solid:true,kind:'stair',light:.95});
   // west-side rail, steps 3..17
-  if(k>=3&&k<=17){W.box(g,ox+16.94,y0,top,ox+17.06,y1,top+.95,{all:'rail',top:'rail'},{solid:true,kind:'rail',light:.95});W.box(g,ox+16.9,y0,top+.95,ox+17.1,y1,top+1.05,'wood_dark',{solid:false,light:.95})}
+  if(k>=3&&k<=13){W.box(g,ox+16.94,y0,top,ox+17.06,y1,top+.95,{all:'rail',top:'rail'},{solid:true,kind:'rail',light:.95});W.box(g,ox+16.9,y0,top+.95,ox+17.1,y1,top+1.05,'wood_dark',{solid:false,light:.95})}
  }
  // handrail post at the foot
  W.box(g,ox+16.9,oy+10.9,0,ox+17.1,oy+11.1,1.1,'wood_dark',{solid:false});
@@ -108,12 +111,12 @@ P.rails=function(g){
    const nx=x+dx,ny=y+dy;const ni=ix(nx,ny);
    if(W.ctype[ni]||W.slab[ni])continue;
    if(lx===16&&ly===18&&d==='E')continue; // stair exit
-   const zt=H.slabT;const th=.1;
+   const zt=H.slabT;const th=.1;const ez=(d==='E'||d==='W')?.01:0;
    let x0,x1,y0,y1;
    if(d==='E'){x0=x+1-th;x1=x+1;y0=y;y1=y+1}else if(d==='W'){x0=x;x1=x+th;y0=y;y1=y+1}else if(d==='S'){x0=x;x1=x+1;y0=y+1-th;y1=y+1}else{x0=x;x1=x+1;y0=y;y1=y+th}
    // top rail, base rail, balusters
-   W.box(g,x0-(d==='E'||d==='W'?.02:0),y0-(d==='N'||d==='S'?.02:0),zt+.95,x1+(d==='E'||d==='W'?.02:0),y1+(d==='N'||d==='S'?.02:0),zt+1.05,'wood_dark',{solid:false,light:1});
-   W.box(g,x0,y0,zt,x1,y1,zt+.12,'wood_dark',{solid:false,light:1});
+   W.box(g,x0-(d==='E'||d==='W'?.02:0),y0-(d==='N'||d==='S'?.02:0),zt+.95+ez,x1+(d==='E'||d==='W'?.02:0),y1+(d==='N'||d==='S'?.02:0),zt+1.05+ez,'wood_dark',{solid:false,light:1});
+   W.box(g,x0,y0,zt,x1,y1,zt+.12+ez,'wood_dark',{solid:false,light:1});
    const bal=(d==='E'||d==='W')?[[0.12],[.37],[.62],[.87]].map(a=>[x0,y+a[0]-.03,x1,y+a[0]+.03]):[[0.12],[.37],[.62],[.87]].map(a=>[x+a[0]-.03,y0,x+a[0]+.03,y1]);
    bal.forEach(b=>W.box(g,b[0],b[1],zt+.12,b[2],b[3],zt+.95,'baluster',{solid:false,light:1}));
    W.addSolid({x0,x1,y0,y1,b:zt,t:zt+1.1,kind:'rail'});
@@ -157,7 +160,7 @@ P.art=function(){
    if(c.dir==='W'&&c.ly>=11)return false;           // stair against east wall
    if(c.dir==='N'&&c.lx>=16)return false;
    return true};
-  const ok1=c=>{if(c.dir==='W'&&c.ly>=11)return false;if(c.dir==='N'&&c.lx>=17)return false;return true};
+  const ok1=c=>{if(c.dir==='S'&&c.lx<=5)return false;if(c.dir==='E'&&c.ly<=5)return false;if(c.dir==='W'&&c.ly>=11)return false;if(c.dir==='N'&&c.lx>=17)return false;return true};
   for(let r=0;r<4;r++){
    const mine=arts.filter(p=>p[0].room===r);if(!mine.length)continue;
    const ground=mine.filter(p=>p[0].frame==='gold'),upper=mine.filter(p=>p[0].frame!=='gold');
@@ -194,7 +197,7 @@ P.art=function(){
    else{y0=py+u0;y1=py+u1;x0=Math.min(px,px+d[0]*dep);x1=Math.max(px,px+d[0]*dep)}
    W.box(g,x0,y0,zc+v0,x1,y1,zc+v1,{all:ft,top:ft,bot:ft},{solid:false,light:s.light})};
   const hw=pw/2+e,hh=ph/2+e;
-  bx(-hw,hw,-hh,-hh+e);bx(-hw,hw,hh-e,hh);bx(-hw,-hw+e,-hh,hh);bx(hw-e,hw,-hh,hh);
+  bx(-hw,hw,-hh,-hh+e);bx(-hw,hw,hh-e,hh);bx(-hw,-hw+e,-hh+e,hh-e);bx(hw-e,hw,-hh+e,hh-e);
   // backing board slightly behind painting
   // plaque
   bx(-.28,.28,-hh-.26,-hh-.1);

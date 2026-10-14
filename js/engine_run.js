@@ -14,7 +14,7 @@ E.init=function(cv){
  renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
  renderer.setClearColor(0xcfe6f5);
  scene=S.scene=new THREE.Scene();
- camera=S.camera=new THREE.PerspectiveCamera(72,1,.05,400);camera.rotation.order='YXZ';
+ camera=S.camera=new THREE.PerspectiveCamera(72,1,.12,320);camera.rotation.order='YXZ';
  scene.fog=new THREE.Fog(0x2a2016,20,80);
  // atlas material
  const tex=new THREE.CanvasTexture(A.canvas);tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;A.texture=tex;
@@ -26,7 +26,7 @@ E.init=function(cv){
   g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));sky=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false}));sky.renderOrder=-10;scene.add(sky)}
  // ground (grass) beyond the building
  {const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');x.drawImage(A.canvas,A.idx.grass%16*16,((A.idx.grass/16)|0)*16,16,16,0,0,16,16);const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(300,300);
-  ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshBasicMaterial({map:t,color:0xdddddd}));ground.rotation.x=-Math.PI/2;ground.position.set(30,-.03,30);scene.add(ground)}
+  ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshBasicMaterial({map:t,color:0xdddddd}));ground.rotation.x=-Math.PI/2;ground.position.set(30,-.07,30);scene.add(ground)}
  // blocky clouds
  {const m=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.92,fog:false});for(let i=0;i<14;i++){const c=new THREE.Mesh(new THREE.BoxGeometry(18+Math.random()*30,3,10+Math.random()*16),m);c.position.set(Math.random()*400-200+30,70+Math.random()*25,Math.random()*400-200+30);scene.add(c);clouds.push(c)}}
  E.build();
@@ -78,7 +78,7 @@ function pickTarget(){
   best=mk();bt=t};
  for(const k in W.artSpots){const s=W.artSpots[k];plane(s.x,s.y,s.z,s.nx,s.ny,s.w,s.h,3.6,()=>({type:'wall',cell:100+s.i,x:s.cell[0],y:s.cell[1],dist:0}))}
  W.signs.forEach((sg,i)=>plane(sg.px,sg.py,sg.pz,sg.nx,sg.ny,sg.pw,sg.ph,3.2,()=>({type:'wall',cell:200+i,x:sg.x,y:sg.y,dist:0})));
- for(const g in W.secretDoor){const d=W.secretDoor[g];if(RS.S.secretOpen[g])continue;plane(d.x+1,d.y+.5,1.5,1,0,1,3,2.8,()=>({type:'wall',cell:90,x:d.x,y:d.y,dist:0}))}
+ for(const g in W.secretDoor){const d=W.secretDoor[g];if(RS.S.secretOpen[g])continue;plane(d.x+1,d.y+.5,1.0,1,0,1,2,2.8,()=>({type:'wall',cell:90,x:d.x,y:d.y,dist:0}))}
  for(const s of E.sprites){if(!s.visible||!s.kind||s.kind==='visitor')continue;
   const cz=(s.zc!==undefined?s.zc:1);const ex=s.x-ox,ey=s.y-oy,ez=cz-oz;const t=ex*dx+ey*dy+ez*dz;
   const reach=s.reach||(s.kind==='station'?3.2:2.8);if(t<.1||t>reach||t>=bt)continue;

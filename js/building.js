@@ -30,14 +30,16 @@ W.layout=function(){
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(!inb(nx,ny)||(floorId[ix(nx,ny)]===9&&!ctype[ix(nx,ny)])){extAdj[i]=1}}}
  // balcony slabs, stair openings, secret chambers
  for(let g=0;g<=7;g++){const [ox,oy]=ORIGIN[g];
+  const inCh=(lx,ly)=>g>=1&&lx<=5&&ly<=5;   // the NW corner mass (chamber + its walls)
   for(let ly=1;ly<=18;ly++)for(let lx=1;lx<=18;lx++){
    const band=lx<=3||lx>=16||ly<=3||ly>=16;if(!band)continue;
    if((lx>=17&&ly>=11)||(lx===16&&ly>=11&&ly<=15)){if(lx>=17)stairc[ix(ox+lx,oy+ly)]=1;continue}
+   if(inCh(lx,ly))continue;
    slab[ix(ox+lx,oy+ly)]=1}
-  if(g>=1){ // secret chamber in the NW corner: interior 4x4, walls on the east and south sides
+  if(g>=1){ // secret chamber: a 4x4 room inside a full-height masonry corner. Its walls are ordinary hall walls; only a flush panel (2 m door) gives it away.
    for(let ly=1;ly<=4;ly++)for(let lx=1;lx<=4;lx++)chamber[ix(ox+lx,oy+ly)]=1;
    for(let k=1;k<=5;k++){for(const [x,y] of [[5,k],[k,5]]){const i=ix(ox+x,oy+y);ctype[i]=2;map[i]=g+1}}
-   const di=ix(ox+5,oy+3);ctype[di]=0;map[di]=90;lintel[di]=1;lintelB[di]=3.0;
+   const di=ix(ox+5,oy+3);ctype[di]=0;map[di]=90;lintel[di]=1;lintelB[di]=H.sdoor;
    W.secretDoor[g]={x:ox+5,y:oy+3,g};
   }
  }
@@ -45,21 +47,21 @@ W.layout=function(){
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=ix(x,y);
   if(ctype[i])W.addSolid({x0:x,x1:x+1,y0:y,y1:y+1,b:0,t:topOf(i),kind:'wall'});
   else{
-   if(lintel[i])W.addSolid({x0:x,x1:x+1,y0:y,y1:y+1,b:lintelB[i],t:map[i]===90?H.chamT:(extAdj[i]?H.par:H.roofT),kind:'wall'});
-   else if(chamber[i])W.addSolid({x0:x,x1:x+1,y0:y,y1:y+1,b:H.chamB,t:H.chamT,kind:'wall'});
+   if(lintel[i])W.addSolid({x0:x,x1:x+1,y0:y,y1:y+1,b:lintelB[i],t:extAdj[i]?H.par:H.roofT,kind:'wall'});
+   else if(chamber[i])W.addSolid({x0:x,x1:x+1,y0:y,y1:y+1,b:H.chamB,t:H.roofT,kind:'wall'});
    else if(slab[i])W.addSolid({x0:x,x1:x+1,y0:y,y1:y+1,b:H.slabB,t:H.slabT,kind:'slab'});
   }}
 };
 /* wall cell top height */
-const topOf=i=>{if(chamber[i]&&!ctype[i])return H.chamT;if(ctype[i]===2)return H.chamT;return extAdj[i]?H.par:H.roofT};
+const topOf=i=>extAdj[i]?H.par:H.roofT;
 W.topOf=topOf;
 /* vertical solid intervals of a cell */
 function ivs(x,y){
  if(!inb(x,y))return [];const i=ix(x,y);
  if(ctype[i]>0)return [[0,topOf(i)]];
- if(lintel[i])return [[lintelB[i],chamber[i]||map[i]===90?H.chamT:(extAdj[i]?H.par:H.roofT)]];
+ if(lintel[i])return [[lintelB[i],extAdj[i]?H.par:H.roofT]];
  const g=floorId[i];if(g===9||g===255)return [];
- if(chamber[i])return [[H.chamB,H.chamT]];
+ if(chamber[i])return [[H.chamB,H.roofT]];
  const out=[];if(slab[i])out.push([H.slabB,H.slabT]);out.push([H.roofB,H.roofT]);return out;
 }
 function subtract(seg,list){let segs=[seg];for(const [a,b] of list){const nx=[];for(const [s0,s1] of segs){if(b<=s0||a>=s1){nx.push([s0,s1]);continue}if(a>s0)nx.push([s0,a]);if(b<s1)nx.push([b,s1])}segs=nx}return segs.filter(s=>s[1]-s[0]>1e-4)}
@@ -132,7 +134,7 @@ W.mesh=function(){
    if(lintel[i]){W.quad(ch,[x,lintelB[i],y],[1,0,0],[0,0,1],1,1,'beam',.8)}
    if(sp<=7&&!lintel[i]){
     const [ox,oy]=ORIGIN[sp];const lx=x-ox,ly=y-oy;
-    if(chamber[i]){W.quad(ch,[x,H.chamB,y],[1,0,0],[0,0,1],1,1,'chamber_ceil',.7);W.quad(ch,[x,H.chamT,y],[0,0,1],[1,0,0],1,1,'roof',1)}
+    if(chamber[i]){W.quad(ch,[x,H.chamB,y],[1,0,0],[0,0,1],1,1,'chamber_ceil',.7)}
     else{
      if(slab[i]){W.quad(ch,[x,H.slabB,y],[1,0,0],[0,0,1],1,1,'coffer',.8);W.quad(ch,[x,H.slabT,y],[0,0,1],[1,0,0],1,1,((x+y)&1)?'parq_a':'parq_b',.98)}
      const sky=lx>=5&&lx<=14&&ly>=5&&ly<=14;

@@ -36,7 +36,8 @@ RS.toast=function(msg,kind){
 };
 
 /* ---------- images (Wikimedia Commons) ---------- */
-const fp=(f,w)=>'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(f.replace(/ /g,'_'))+'?width='+w;
+const STD=[120,250,330,500,960,1280,1920];
+const fp=(f,w)=>{w=STD.find(s=>s>=w)||1920;return 'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(f.replace(/ /g,'_'))+'?width='+w};
 RS.fileUrl=fp;
 const API='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*';
 const cacheKey='rs-img-v1';

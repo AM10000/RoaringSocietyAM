@@ -4,7 +4,7 @@
 'use strict';
 const D=window.DATA,A=window.Atlas;
 const N=60,B=20;
-const H={slabT:5.0,slabB:4.75,roofB:9.8,roofT:10.2,par:11.0,door:3.4,chamB:3.4,chamT:3.6};
+const H={slabT:5.0,slabB:4.75,roofB:9.8,roofT:10.2,par:11.0,door:3.4,sdoor:2.0,chamB:3.4,chamT:3.6};
 const W=window.World={N,B,H};
 
 /* ---- block layout (same ring as before) ---- */

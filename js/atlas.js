@@ -211,5 +211,13 @@ A.animate=function(dt){wtime+=dt;if(wtime<0.28)return false;wtime=0;wf=(wf+1)%4;
  const t=new Tile(68);waterFrame(t,wf);const id=IDX.water;cx.putImageData(new ImageData(t.d,TS,TS),(id%COLS)*TS,((id/COLS)|0)*TS);
  if(A.texture)A.texture.needsUpdate=true;return true};
 build();
+/* tiles that disguise the hidden-room doors */
+function derive(name,from,seed,fn){const id=IDX[from];const im=cx.getImageData((id%COLS)*TS,((id/COLS)|0)*TS,TS,TS);
+ def(name,seed,t=>{t.d.set(im.data);fn(t)})}
+derive('plate19','wall_1',301,t=>{t.rect(4,4,8,7,'#8c6d23');t.rect(5,5,6,5,GOLD);t.rect(5,5,6,1,'#f0d676');t.vl(6,6,8,'#3a2a08');t.px(7,6,'#3a2a08');t.px(7,8,'#3a2a08');t.vl(9,6,8,'#3a2a08');t.px(10,6,'#3a2a08');t.px(10,8,'#3a2a08');t.px(6,4,'#3a2a08');t.px(11,4,'#3a2a08');t.px(6,10,'#3a2a08');t.px(11,10,'#3a2a08')});
+def('cabinet',302,t=>{t.fill('#59635e');t.noise(.08);for(const y of [0,5,10]){t.rect(1,y+1,14,4,'#6e7a74');t.hl(y+1,1,14,'#8e9b94');t.hl(y+4,1,14,'#3c4541');t.rect(6,y+2,4,1,'#c9a23a');t.rect(11,y+2,3,2,'#e8e0c4')}t.vl(0,0,15,'#3c4541');t.vl(15,0,15,'#3c4541')});
+def('trunk',303,t=>{t.fill('#5a3a1e');t.noise(.1);for(let y=1;y<16;y+=3)t.hl(y,0,15,'#6e4a28');t.rect(0,0,16,2,'#2e2a26');t.rect(0,14,16,2,'#2e2a26');t.rect(0,6,16,2,'#2e2a26');t.rect(6,5,4,5,GOLD);t.px(7,7,'#2a1c0d');for(const x of [1,14])for(const y of [3,12])t.px(x,y,'#d9d3c0')});
+def('cask',304,t=>{t.fill('#2b1c10');for(const [x,y] of [[4,4],[12,4],[4,12],[12,12]]){for(let j=-4;j<=4;j++)for(let i=-4;i<=4;i++){const d=i*i+j*j;if(d<=16)t.px(x+i,y+j,d>12?'#3a2a1a':((i+j)%2?'#7a5028':'#8a5c30'))}for(let j=-4;j<=4;j++)t.px(x-4+Math.abs(0),y+j,'#222')}t.hl(8,0,15,'#4a2e14');t.hl(0,0,15,'#4a2e14');t.hl(15,0,15,'#4a2e14');t.noise(.06)});
+def('vaultdoor',305,t=>{t.fill('#7d848c');t.noise(.1);t.rect(0,0,16,1,'#c8ced6');t.rect(0,15,16,1,'#4b5057');t.vl(0,0,15,'#4b5057');t.vl(15,0,15,'#4b5057');for(const [x,y] of [[2,2],[13,2],[2,13],[13,13]]){t.px(x,y,'#d9dee4');t.px(x+1,y,'#4b5057')}for(let k=0;k<5;k++){t.px(2+k*3,7,'#d4af37');t.px(2+k*3,8,'#111')}t.hl(5,3,12,'#4b5057');t.hl(10,3,12,'#4b5057')});
 A.count=next;
 })();
