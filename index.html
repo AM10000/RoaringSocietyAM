@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Roaring Society: An Interactive 3D Digital Museum</title>
+<meta name="description" content="A browser-based pixel-art museum about social conflict and civil liberties in 1920s America: the Great Migration, the ACLU, the Red Scare, Gitlow v. New York, and Prohibition.">
+<meta name="theme-color" content="#2b2118">
+<meta property="og:title" content="The Roaring Society: An Interactive 3D Digital Museum">
+<meta property="og:description" content="Walk through five galleries on race, immigration, radicalism, civil liberties, and Prohibition in the 1920s.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232b2118'/%3E%3Cpath d='M6 24V12l10-6 10 6v12z' fill='%23d4af37'/%3E%3Crect x='13' y='16' width='6' height='8' fill='%232b2118'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://commons.wikimedia.org" crossorigin>
+<link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-head" id="top">
+ <a class="brand pix" href="#top">The Roaring Society</a>
+ <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="nav">&#9776;</button>
+ <nav id="nav" aria-label="Main">
+  <a href="#legacy">WWI Legacy</a>
+  <a href="#gallery-1">I</a><a href="#gallery-2">II</a><a href="#gallery-3">III</a><a href="#gallery-4">IV</a><a href="#gallery-5">V</a>
+  <a href="#guiding">Guiding Questions</a>
+  <a href="#design">Museum Plan</a>
+  <a href="#research">Research Room</a>
+  <button class="btn gold" data-play>Enter the museum</button>
+ </nav>
+</header>
+
+<main id="main">
+<section class="hero">
+ <div class="hero-text">
+  <p class="eyebrow pix">An Interactive 3D Digital Museum</p>
+  <h1 class="pix">The Roaring Society</h1>
+  <p class="lede"><em>Social Conflict and Civil Liberties in 1920s America</em></p>
+  <p>The 1920s roared with jazz, cars, and new fortunes. They also roared with fear, anger, and argument. Walk through a pixel-art museum, study the evidence, finish quests, and answer two Guiding Questions about freedom, equality, and human dignity.</p>
+  <p class="cta"><button class="btn gold big" data-play>&#9654; Enter the museum</button> <a class="btn big" href="#gallery-1">Browse the galleries</a></p>
+  <p class="small">Play in any modern desktop browser. Touch controls are included. Progress saves automatically in your browser.</p>
+ </div>
+ <div class="hero-art" id="hero-art" aria-hidden="true"></div>
+</section>
+
+<section id="legacy" class="band">
+ <h2 class="pix">The Legacy of World War I</h2>
+ <p class="lede">Four direct effects of World War I shaped the social conflicts of the 1920s.</p>
+ <ol class="cards four" id="wwi"></ol>
+</section>
+
+<section id="gallery-1" class="gallery" style="--acc:#1f8a8a">
+ <header><span class="gnum pix">Gallery I</span><h2 class="pix">The Great Migration and Racial Tensions</h2><p class="rq"><b>Research question:</b> What pushed Black Southerners north and pulled them toward Northern and Midwestern cities, and how did that movement intensify racial conflict?</p></header>
+ <div class="cols2">
+  <div><h3>Push factors (leaving the South)</h3><ul>
+   <li><b>Economic:</b> the boll weevil destroyed cotton crops, and tenant farming and sharecropping created debt traps.</li>
+   <li><b>Social and political:</b> systemic disenfranchisement (poll taxes, literacy tests), Jim Crow segregation, and extreme racial violence, including lynchings.</li></ul></div>
+  <div><h3>Pull factors (moving to the North and Midwest)</h3><ul>
+   <li><b>Economic:</b> wartime labor shortages created high-paying factory jobs in Chicago, Detroit, New York, and Pittsburgh.</li>
+   <li><b>Social:</b> greater voting rights, better access to public education, and growing urban African American communities.</li></ul></div>
+ </div>
+ <h3>Racial tensions and mass violence</h3>
+ <ul><li><b>The Red Summer of 1919:</b> more than 20 race riots erupted across the United States.</li>
+ <li><b>The Tulsa Race Massacre (1921):</b> white mobs burned the Black business district of Greenwood, known as &ldquo;Black Wall Street,&rdquo; after unproven allegations against a young Black man. Up to 300 African Americans died, and the neighborhood was destroyed.</li></ul>
+ <h3>The revived Ku Klux Klan</h3>
+ <ul><li>Re-founded at Stone Mountain, Georgia, in 1915, the 1920s Klan spread beyond the Reconstruction-era South into the Midwest and western cities, such as those in Indiana.</li>
+ <li>Its targets widened from Black Americans to Roman Catholics, Jews, immigrants, and modern or secular social trends.</li>
+ <li>Membership peaked at an estimated 4 to 5 million by the mid-1920s. The Klan used lobbying, rallies, and violence under the banner of &ldquo;100% Americanism.&rdquo;</li></ul>
+ <p class="note">Content note: this gallery discusses racial violence. Images are limited to aftermath and text, and the museum lets you skip sensitive rooms.</p>
+ <div class="art-grid" data-gal="1"></div>
+</section>
+
+<section id="gallery-2" class="gallery" style="--acc:#9b2335">
+ <header><span class="gnum pix">Gallery II</span><h2 class="pix">The Birth of the ACLU</h2><p class="rq"><b>Research question:</b> How did wartime and postwar repression lead to organized civil-liberties advocacy in 1920?</p></header>
+ <ul>
+  <li><b>Context.</b> The ACLU formed in 1920 in response to wartime civil-liberties violations under the Espionage and Sedition Acts and the Palmer Raids of 1919&ndash;1920. Attorney General A. Mitchell Palmer ordered warrantless mass arrests and deportations of suspected radicals without due process.</li>
+  <li><b>Founders.</b> Key founders included Roger Baldwin, Crystal Eastman, and Jane Addams.</li>
+  <li><b>Mission.</b> The ACLU defends constitutional rights, especially First Amendment freedoms of speech, assembly, and press and the right to due process, regardless of the political beliefs of the accused.</li>
+  <li><b>Early actions.</b> In the 1920s it provided legal defense in high-profile cases such as the Scopes Trial (1925) and defended labor organizers and anti-war dissidents.</li></ul>
+ <div class="art-grid" data-gal="2"></div>
+</section>
+
+<section id="gallery-3" class="gallery" style="--acc:#c8902a">
+ <header><span class="gnum pix">Gallery III</span><h2 class="pix">Intolerance, Xenophobia, and the First Red Scare</h2><p class="rq"><b>Research question:</b> How did fear of foreigners and radicals shape immigration restriction and anti-labor policy?</p></header>
+ <h3>The First Red Scare (1919&ndash;1920)</h3>
+ <p>It was fueled by the 1917 Bolshevik Revolution, postwar economic turmoil, and high-profile anarchist bombings.</p>
+ <h3>The Sacco and Vanzetti trial (1921&ndash;1927)</h3>
+ <p>Italian immigrants Nicola Sacco and Bartolomeo Vanzetti, self-proclaimed anarchists, were convicted of a robbery and murder in Massachusetts. Despite weak physical evidence and unreliable witnesses, both were executed in 1927. The case exposed judicial bias, nativism, and fear of radical ideologies.</p>
+ <h3>Immigration restriction</h3>
+ <div class="table-wrap"><table>
+  <thead><tr><th scope="col">Law</th><th scope="col">Quota</th><th scope="col">Census baseline</th><th scope="col">Effect</th></tr></thead>
+  <tbody>
+   <tr><th scope="row">Emergency Quota Act (1921)</th><td>3% of each nationality&rsquo;s foreign-born population</td><td>1910</td><td>Capped total annual immigration and set nationality quotas</td></tr>
+   <tr><th scope="row">National Origins Act (Immigration Act of 1924)</th><td>2%</td><td>1890</td><td>Favored &ldquo;Old Immigrants&rdquo; (Northern and Western Europeans), sharply curtailed &ldquo;New Immigrants&rdquo; (Southern and Eastern Europeans, mostly Catholic or Jewish), and completely barred Asian immigration</td></tr>
+  </tbody></table></div>
+ <h3>Suppression of labor unions</h3>
+ <ul><li>Strikes such as the 1919 Boston Police Strike and the Seattle General Strike were portrayed in the media as communist plots.</li>
+ <li>Business groups promoted the &ldquo;American Plan,&rdquo; open-shop policies that suppressed union membership. Union enrollment fell sharply over the decade.</li></ul>
+ <div class="art-grid" data-gal="3"></div>
+</section>
+
+<section id="gallery-4" class="gallery" style="--acc:#4a6a9b">
+ <header><span class="gnum pix">Gallery IV</span><h2 class="pix"><i>Gitlow v. New York</i> (1925)</h2><p class="rq"><b>Research question:</b> Why does <i>Gitlow</i> matter in the history of free-speech protection?</p></header>
+ <ul>
+  <li><b>Background.</b> Benjamin Gitlow, a socialist leader, was convicted under New York&rsquo;s Criminal Anarchy Law for publishing the Left Wing Manifesto, which advocated overthrowing the government.</li>
+  <li><b>Decision.</b> The Supreme Court upheld the conviction, ruling that speech encouraging violent revolution threatens public safety.</li>
+  <li><b>Significance.</b> Even so, the Court established that the First Amendment&rsquo;s protection of free speech applies to state governments, not just the federal government, through the Due Process Clause of the 14th Amendment.</li>
+  <li><b>Incorporation.</b> This began the selective incorporation doctrine, which expanded federal protection of individual constitutional rights against state interference.</li></ul>
+ <div class="art-grid" data-gal="4"></div>
+</section>
+
+<section id="gallery-5" class="gallery" style="--acc:#d99a1e">
+ <header><span class="gnum pix">Gallery V</span><h2 class="pix">Prohibition</h2><p class="rq"><b>Research question:</b> How did the intended effects of the 18th Amendment and the Volstead Act differ from their actual consequences?</p></header>
+ <p><b>Intended effects.</b> Supporters aimed to eliminate alcohol abuse, reduce domestic violence, improve workplace productivity, lower crime, and close saloons.</p>
+ <h3>Unintended effects</h3>
+ <ul>
+  <li><b>Organized crime.</b> Bootlegging empires flourished, such as Al Capone&rsquo;s in Chicago, earning billions of dollars through illegal alcohol distribution and racketeering.</li>
+  <li><b>Speakeasies and an underground economy.</b> Illicit drinking establishments thrived in an unregulated alcohol trade.</li>
+  <li><b>Erosion of respect for law.</b> Millions of law-abiding citizens routinely broke the law, and corruption spread through police departments, courts, and federal Prohibition agents.</li>
+  <li><b>Economic loss.</b> Governments lost millions in alcohol tax revenue while enforcement spending rose.</li>
+  <li><b>Repeal.</b> The 21st Amendment ended Prohibition in 1933.</li></ul>
+ <div class="art-grid" data-gal="5"></div>
+</section>
+
+<section id="guiding" class="band dark">
+ <h2 class="pix">Guiding Questions</h2>
+ <p class="lede">The museum addresses two questions in its galleries and Synthesis Gallery.</p>
+ <div class="cols2">
+  <article class="gq"><h3>1. How have economic, political, and cultural decisions promoted or prevented the growth of personal freedom, individual responsibility, equality, and respect for human dignity?</h3>
+   <h4>Prevented</h4><ul id="gq-prev"></ul><h4>Promoted</h4><ul id="gq-prom"></ul></article>
+  <article class="gq"><h3>2. How can the study of multiple perspectives, belief systems, and cultures provide context for understanding and challenging current public actions and decisions in a diverse and interdependent world?</h3><p id="gq2"></p></article>
+ </div>
+ <blockquote class="thesis">The Roaring Twenties were characterized not only by economic and cultural change, but also by intense conflicts over race, immigration, political radicalism, civil liberties, government authority, and social regulation.</blockquote>
+</section>
+
+<section id="design" class="band">
+ <h2 class="pix">Museum Design Plan</h2>
+ <div class="cols2">
+  <div><h3>Core representations</h3><p>The museum includes at least five distinct artifacts or media items, for example:</p><ul>
+   <li>A primary-document excerpt from <i>Gitlow v. New York</i></li><li>A photograph or map of Great Migration routes</li><li>Audio clips or primary quotations from Sacco and Vanzetti</li><li>Photographs and newspaper clippings of Prohibition raids</li><li>Photographs of Klan marches in Washington, D.C.</li></ul></div>
+  <div><h3>Self-guided navigation</h3><p>The platform provides clear menus and visual tools so visitors can explore independently and always find their way back to the main museum: a minimap, a full map, a teleport menu, and a location banner.</p>
+   <h3>Audio and video</h3><p>Narrated voiceovers, primary-source audio readings, and a newsreel viewer support the galleries, all with captions.</p>
+   <h3>Research Room</h3><p>A formatted bibliography, with primary and secondary sources separated, anchors the project&rsquo;s research.</p></div>
+ </div>
+ <h3>The ring museum</h3>
+ <div class="table-wrap"><table><thead><tr><th scope="col">Wing</th><th scope="col">Position</th><th scope="col">Exhibit</th><th scope="col">Accent</th></tr></thead><tbody id="wings"></tbody></table></div>
+ <h3>Exhibit flow in every gallery</h3>
+ <ol class="flow"><li><b>Historical Context</b> in the main hall</li><li><b>Evidence</b> rooms with facts, statistics, and testimony</li><li><b>Source Analysis</b> of primary and secondary sources</li><li><b>Interactive Experience</b>: the gallery&rsquo;s simulation or map</li><li><b>Historical Interpretation</b> and reflection</li><li><b>Continue</b> to the next wing</li></ol>
+ <h3>Interactive exhibits</h3>
+ <ul class="chips-list"><li>Migration Map</li><li>Civil-Liberties Decision Simulation</li><li>Source Analysis stations</li><li>Quota Calculator</li><li>Attitudes and Policy Board</li><li>Supreme Court Simulation</li><li>Prohibition Policy Simulation</li><li>Blind Pig speakeasy and Raid! mini-game</li><li>Guiding Questions argument builder</li></ul>
+</section>
+
+<section id="research" class="band">
+ <h2 class="pix">The Digital Research Room</h2>
+ <p class="lede">Bibliography (MLA), with primary and secondary sources separated.</p>
+ <div class="cols2"><div><h3>Secondary sources</h3><ul class="bib-list" id="bib-sec"></ul></div><div><h3>Primary sources</h3><ul class="bib-list" id="bib-pri"></ul></div></div>
+ <p class="small">Planned additions once cited: <i>America&rsquo;s History</i>, Volume II; <i>American Issues: A Documentary Reader</i>; library databases such as Gale; and chapter materials on the revived Klan and Prohibition. Images are credited on each Source Card and come from Wikimedia Commons, including Library of Congress and National Archives holdings.</p>
+</section>
+
+<section id="play" class="band dark">
+ <h2 class="pix">Play the museum</h2>
+ <div class="cols2">
+  <div><p>Walk the ring, click artworks to study them, finish 44 quests, find hidden passages, collect replica artifacts, and earn five Gallery Keys. Then answer the Guiding Questions and download your certificate.</p>
+  <p class="cta"><button class="btn gold big" data-play>&#9654; Enter the museum</button></p>
+  <ul><li>About 60 to 90 minutes for a full playthrough</li><li>Works offline after first load, except images</li><li>Accessibility: captions, text size, reduced motion, high contrast, full keyboard menus</li></ul></div>
+  <table class="ctl"><tbody>
+   <tr><th scope="row">W A S D / arrows</th><td>Move</td></tr><tr><th scope="row">Mouse</th><td>Look (click to capture, Esc to release)</td></tr><tr><th scope="row">Shift</th><td>Walk faster</td></tr>
+   <tr><th scope="row">E / click</th><td>Interact</td></tr><tr><th scope="row">Q</th><td>Quest Book</td></tr><tr><th scope="row">I</th><td>Inventory</td></tr><tr><th scope="row">M</th><td>Full map</td></tr><tr><th scope="row">T</th><td>Teleport</td></tr><tr><th scope="row">Esc</th><td>Pause and settings</td></tr></tbody></table>
+ </div>
+</section>
+</main>
+
+<footer class="site-foot"><p>The Roaring Society &middot; a student research project on social conflict and civil liberties in 1920s America.</p><p class="small">Images from Wikimedia Commons (public domain unless a Source Card says otherwise). All collectible items are labeled replicas. Case files and fictional characters are always labeled.</p></footer>
+
+<!-- ============ GAME ============ -->
+<div id="game" hidden>
+ <canvas id="view" width="480" height="270" aria-label="First-person view of the museum"></canvas>
+ <div id="hud">
+  <div id="banner" role="status" aria-live="polite"></div>
+  <div id="tracker" hidden></div>
+  <div class="mini-wrap"><canvas id="minimap" width="150" height="150" aria-hidden="true"></canvas><span class="floor">F1</span></div>
+  <div id="cross"></div>
+  <div id="prompt" hidden></div>
+  <div id="bubble" hidden role="status"></div>
+  <div id="captions" hidden aria-live="polite"></div>
+  <div id="fade"></div>
+  <div class="hud-btns"><button class="btn sm" onclick="Game.questBook()" aria-label="Quest Book">Q</button><button class="btn sm" onclick="Game.inventory()" aria-label="Inventory">I</button><button class="btn sm" onclick="Game.fullMap()" aria-label="Map">M</button><button class="btn sm" onclick="Game.teleportMenu()" aria-label="Teleport">T</button><button class="btn sm" onclick="Game.pause()" aria-label="Menu">&#9776;</button></div>
+  <div id="joy" aria-hidden="true"><div id="joyknob"></div></div><div id="lookzone" aria-hidden="true"></div>
+  <div class="tbtns"><button id="btn-e" class="btn gold">E</button><button id="btn-q" class="btn">Q</button><button id="btn-m" class="btn">&#9776;</button></div>
+  <div id="start-card" role="dialog" aria-label="Start"><div class="ov-card"><h2 class="pix">The Roaring Society</h2><p>Welcome, visitor. Gold frames are primary sources, silver frames are secondary sources, and green plaques are evidence. Press <b>T</b> at any time to teleport.</p><p class="small">WASD to move &middot; mouse to look &middot; E to interact &middot; Q quests &middot; I inventory &middot; M map</p><button class="btn gold big" onclick="Game.begin()">Begin</button> <button class="btn" onclick="Game.help()">Controls</button> <button class="btn ghost" onclick="Game.exit()">Back to website</button></div></div>
+ </div>
+</div>
+<noscript><p style="padding:1rem;background:#fff3cd">The interactive museum needs JavaScript. All research text above is readable without it.</p></noscript>
+
+<script src="js/data.js"></script>
+<script src="js/core.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>
