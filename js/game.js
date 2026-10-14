@@ -49,7 +49,7 @@ RS.on('zone',z=>{
  let name,acc;
  if(g===9){name='Central Courtyard';acc='#6a9a4a';S.visited.includes('z9')||S.visited.push('z9')}
  else if(g===0){name='Entrance Hall';acc=D.G[0].accent;S.visited.includes('z0')||S.visited.push('z0')}
- else{name=D.G[g].n+' — '+D.G[g].rooms[z.room];acc=D.G[g].accent;['z'+g,'z'+g+'-'+z.room].forEach(id=>{if(!S.visited.includes(id))S.visited.push(id)})}
+ else{name=D.G[g].n+' — '+D.G[g].rooms[z.room]+(z.level?' · Upper level':'');acc=D.G[g].accent;['z'+g,'z'+g+'-'+z.room].forEach(id=>{if(!S.visited.includes(id))S.visited.push(id)})}
  showBanner(name,acc);
  if(g!==9&&g<8)E.loadGallery(g);
  // preload neighbours
@@ -177,8 +177,8 @@ function station(id){
 
 /* ---------------- Directory / Teleport / Map ---------------- */
 const TELE=[
- ['Entrance Hall',30.5,55.5,-Math.PI/2,0],['Courtyard (fountain)',30.5,36.5,-Math.PI/2,9],
- ['Gallery I — Hall of Departures',15.5,49.5,Math.PI,1],['Gallery II — Red Scare Hall',9.5,35.5,-Math.PI/2,2],['Gallery III — Hall of Fear',9.5,15.5,-Math.PI/2,3],
+ ['Entrance Hall',28.5,54.5,-Math.PI/2,0],['Courtyard (fountain)',29.5,35.2,-Math.PI/2,9],
+ ['Gallery I — Hall of Departures',15.5,49.5,Math.PI,1],['Gallery II — Red Scare Hall',9.5,35.5,-Math.PI/2,2],['Gallery III — Hall of Fear',7.5,14.5,-Math.PI/2,3],
  ['Gallery IV — Courtroom Lobby',24.5,9.5,0,4],['Gallery V — Temperance Hall',44.5,9.5,0,5],['Research Room — Reading Room',49.5,24.5,Math.PI/2,6],
  ['Synthesis Gallery — Hall of Evidence',49.5,44.5,Math.PI/2,7],['Rooftop — Timeline Terrace',0,0,0,'roof']];
 G.teleportMenu=function(){
@@ -211,7 +211,7 @@ G.fullMap=function(){
  draw();
  c.addEventListener('click',ev=>{const r=c.getBoundingClientRect();const mx=(ev.clientX-r.left)*420/r.width,my=(ev.clientY-r.top)*420/r.height;const bx=Math.floor(mx/140),by=Math.floor(my/140);const key=bx+','+by;const g={'1,2':0,'0,2':1,'0,1':2,'0,0':3,'1,0':4,'2,0':5,'2,1':6,'2,2':7,'1,1':9}[key];
   const t=TELE.find(t=>t[4]===g);if(t&&confirm('Teleport to '+t[0]+'?')){RS.closeOverlay();G.goto(t)}});
- const w=el('div',{class:'prose'},[el('p',{},['The ring has eight wings around a courtyard. Floors B1, F2, and F3 are folded into this single level: hidden passages are secret rooms, and the Timeline Terrace is reached from the teleport menu.']),c]);
+ const w=el('div',{class:'prose'},[el('p',{},['The ring has eight wings around an open-air courtyard. Every wing has a ground floor and an upper mezzanine reached by the grand staircase: primary sources hang downstairs, secondary sources and evidence panels hang upstairs. Hidden passages are secret rooms, and the Timeline Terrace is reached from the teleport menu.']),c]);
  RS.overlay('Museum map',w);document.exitPointerLock&&document.exitPointerLock();
 };
 
@@ -345,7 +345,7 @@ G.settings=function(){
  const w=el('div',{class:'settings'},[
   slider('Mouse / turn sensitivity','sens',.3,2.5,.1),slider('Text size','text',.9,1.6,.05,v=>Math.round(v*100)+'%'),slider('Master volume','vol',0,1,.05,v=>Math.round(v*100)+'%'),slider('Music volume','music',0,1,.05,v=>Math.round(v*100)+'%'),
   check('Captions for narration and audio','captions'),check('Reduced motion (no head bob, fades)','reducedMotion'),check('High-contrast interface','contrast'),check('Head bob','bob'),
-  el('label',{class:'set-row'},['Render quality ',el('select',{onchange:e=>{s.quality=+e.target.value;E.resize();RS.save()}},[el('option',{value:1,selected:s.quality===1?'selected':false},['Normal (480×270)']),el('option',{value:0,selected:s.quality===0?'selected':false},['Fast (320×180)'])])]),
+  el('label',{class:'set-row'},['Render quality ',el('select',{onchange:e=>{s.quality=+e.target.value;E.resize();RS.save()}},[el('option',{value:1,selected:s.quality===1?'selected':false},['Full resolution']),el('option',{value:0,selected:s.quality===0?'selected':false},['Fast (lower resolution)'])])]),
   el('div',{class:'set-actions'},[el('button',{class:'btn ghost',onclick:()=>{if(confirm('Erase all saved progress?'))RS.reset()}},['Reset progress'])]),
   el('p',{class:'small'},['Colorblind-safe: markers use shape and color. Full keyboard support: Tab through menus, Enter to select, Esc to close.'])]);
  RS.overlay('Settings',w);
@@ -367,7 +367,7 @@ G.pause=function(){
 };
 G.resume=function(){const cv=E.canvas;try{if(!E.touch)cv.requestPointerLock()}catch(e){}};
 G.help=function(){
- const rows=[['W A S D / arrows','Move'],['Mouse','Look (click the screen to capture; Esc releases)'],['Shift','Walk faster'],['E or left click','Interact'],['Q','Quest Book'],['I','Inventory'],['M','Full map'],['T','Teleport menu'],['Esc','Pause and settings']];
+ const rows=[['W A S D / arrows','Move'],['Mouse','Look around, up and down (click the screen to capture; Esc releases)'],['Space','Jump'],['Shift','Walk faster'],['E or left click','Interact, or sit on a bench or chair (move to stand up)'],['Q','Quest Book'],['I','Inventory'],['M','Full map'],['T','Teleport menu'],['Esc','Pause and settings']];
  const t=el('table',{class:'ctl'});rows.forEach(r=>t.append(el('tr',{},[el('th',{},[r[0]]),el('td',{},[r[1]])])));
  RS.overlay('Controls',el('div',{class:'prose'},[t,el('p',{},['Gold frames are primary sources, silver frames are secondary sources, and green plaques are evidence panels.'])]));
 };
@@ -411,10 +411,10 @@ function setupTouch(){
  joy.addEventListener('touchstart',e=>{const t=e.changedTouches[0];jid=t.identifier;e.preventDefault()},{passive:false});
  joy.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===jid){const r=joy.getBoundingClientRect();let x=(t.clientX-r.left-r.width/2)/(r.width/2),y=(t.clientY-r.top-r.height/2)/(r.height/2);const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}E.joy={x,y};knob.style.transform=`translate(${x*30}px,${y*30}px)`}e.preventDefault()},{passive:false});
  const end=e=>{for(const t of e.changedTouches)if(t.identifier===jid){jid=null;E.joy=null;knob.style.transform=''}};joy.addEventListener('touchend',end);joy.addEventListener('touchcancel',end);
- look.addEventListener('touchstart',e=>{const t=e.changedTouches[0];lid=t.identifier;lx=t.clientX;e.preventDefault()},{passive:false});
- look.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===lid){E.lookDelta=(t.clientX-lx)*0.006*S.settings.sens;lx=t.clientX}e.preventDefault()},{passive:false});
+ let ly=0;look.addEventListener('touchstart',e=>{const t=e.changedTouches[0];lid=t.identifier;lx=t.clientX;ly=t.clientY;e.preventDefault()},{passive:false});
+ look.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===lid){E.lookDelta=(t.clientX-lx)*0.006*S.settings.sens;E.lookDeltaY=(t.clientY-ly)*0.006*S.settings.sens;lx=t.clientX;ly=t.clientY}e.preventDefault()},{passive:false});
  look.addEventListener('touchend',()=>{lid=null});
- $('#btn-e').addEventListener('click',()=>E.interact());$('#btn-q').addEventListener('click',()=>G.questBook());$('#btn-m').addEventListener('click',()=>G.pause());
+ $('#btn-e').addEventListener('click',()=>E.interact());const bj=$('#btn-j');if(bj)bj.addEventListener('click',()=>{E.player.jumpReq=true});$('#btn-q').addEventListener('click',()=>G.questBook());$('#btn-m').addEventListener('click',()=>G.pause());
 }
 if(window.matchMedia&&matchMedia('(pointer:coarse)').matches)setupTouch();
 window.addEventListener('beforeunload',()=>{if(G.booted)saveAll()});

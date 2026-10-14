@@ -176,7 +176,7 @@
 
 <!-- ============ GAME ============ -->
 <div id="game" hidden>
- <canvas id="view" width="480" height="270" aria-label="First-person view of the museum"></canvas>
+ <canvas id="view" width="960" height="540" aria-label="First-person view of the museum"></canvas>
  <div id="hud">
   <div id="banner" role="status" aria-live="polite"></div>
   <div id="tracker" hidden></div>
@@ -188,7 +188,7 @@
   <div id="fade"></div>
   <div class="hud-btns"><button class="btn sm" onclick="Game.questBook()" aria-label="Quest Book">Q</button><button class="btn sm" onclick="Game.inventory()" aria-label="Inventory">I</button><button class="btn sm" onclick="Game.fullMap()" aria-label="Map">M</button><button class="btn sm" onclick="Game.teleportMenu()" aria-label="Teleport">T</button><button class="btn sm" onclick="Game.pause()" aria-label="Menu">&#9776;</button></div>
   <div id="joy" aria-hidden="true"><div id="joyknob"></div></div><div id="lookzone" aria-hidden="true"></div>
-  <div class="tbtns"><button id="btn-e" class="btn gold">E</button><button id="btn-q" class="btn">Q</button><button id="btn-m" class="btn">&#9776;</button></div>
+  <div class="tbtns"><button id="btn-j" class="btn">&#9650;</button><button id="btn-e" class="btn gold">E</button><button id="btn-q" class="btn">Q</button><button id="btn-m" class="btn">&#9776;</button></div>
   <div id="start-card" role="dialog" aria-label="Start"><div class="ov-card"><h2 class="pix">The Roaring Society</h2><p>Welcome, visitor. Gold frames are primary sources, silver frames are secondary sources, and green plaques are evidence. Press <b>T</b> at any time to teleport.</p><p class="small">WASD to move &middot; mouse to look &middot; E to interact &middot; Q quests &middot; I inventory &middot; M map</p><button class="btn gold big" onclick="Game.begin()">Begin</button> <button class="btn" onclick="Game.help()">Controls</button> <button class="btn ghost" onclick="Game.exit()">Back to website</button></div></div>
  </div>
 </div>

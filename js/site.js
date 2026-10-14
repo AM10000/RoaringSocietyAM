@@ -30,10 +30,9 @@ const nt=$('.nav-toggle'),nav=$('#nav');nt.addEventListener('click',()=>{const o
 nav.addEventListener('click',e=>{if(e.target.tagName==='A')nav.classList.remove('open')});
 // lazy-load game scripts
 let loading=null;
-function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.body.append(s)})}
-function loadGame(){if(loading)return loading;
- loading=loadScript('js/engine.js').then(()=>loadScript('js/sims.js')).then(()=>loadScript('js/game.js'));
- return loading}
+function loadScripts(list){return Promise.all(list.map(src=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=res;s.onerror=()=>rej(new Error('Could not load '+src));document.body.append(s)})))}
+const GAME_SCRIPTS=['js/vendor/three.min.js','js/atlas.js','js/world.js','js/building.js','js/physics.js','js/props.js','js/props2.js','js/npc.js','js/engine.js','js/engine_run.js','js/sims.js','js/game.js'];
+function loadGame(){if(loading)return loading;loading=loadScripts(GAME_SCRIPTS);return loading}
 RS.$$('[data-play]').forEach(b=>b.addEventListener('click',async()=>{b.disabled=true;const t=b.textContent;b.textContent='Loading…';try{await loadGame();window.Game.start()}catch(e){console.error(e);alert('Could not start the game: '+e.message)}b.disabled=false;b.textContent=t}));
 // preload game scripts when idle (does not block page)
 (window.requestIdleCallback?window.requestIdleCallback(()=>{loadGame().catch(()=>{})},{timeout:5000}):setTimeout(()=>{loadGame().catch(()=>{})},4000));
