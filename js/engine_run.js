@@ -17,18 +17,18 @@ E.init=function(cv){
  camera=S.camera=new THREE.PerspectiveCamera(72,1,.12,320);camera.rotation.order='YXZ';
  scene.fog=new THREE.Fog(0x2a2016,20,80);
  // atlas material
- const tex=new THREE.CanvasTexture(A.canvas);tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;A.texture=tex;
- S.mat=new THREE.MeshBasicMaterial({map:tex,vertexColors:true});
+ const tex=new THREE.CanvasTexture(A.canvas);tex.magFilter=tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());A.texture=tex;
+ S.mat=new THREE.MeshStandardMaterial({map:tex,vertexColors:true,roughness:.76,metalness:.04});
  // lights for the blocky people
- scene.add(new THREE.AmbientLight(0xffffff,.85));const dl=new THREE.DirectionalLight(0xfff2d8,.55);dl.position.set(-3,6,4);scene.add(dl);
+ scene.add(new THREE.HemisphereLight(0xe5edf6,0x77634d,1.15));const dl=new THREE.DirectionalLight(0xfff2d8,.55);dl.position.set(-3,6,4);scene.add(dl);
  // sky dome
  {const g=new THREE.SphereGeometry(300,16,10);const col=[];const pos=g.attributes.position;for(let i=0;i<pos.count;i++){const t=Math.max(0,pos.getY(i)/300);const c=SKY_HOR.clone().lerp(SKY_TOP,Math.pow(t,.6));col.push(c.r,c.g,c.b)}
   g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));sky=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false}));sky.renderOrder=-10;scene.add(sky)}
  // ground (grass) beyond the building
- {const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');x.drawImage(A.canvas,A.idx.grass%16*16,((A.idx.grass/16)|0)*16,16,16,0,0,16,16);const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(300,300);
+ {const c=document.createElement('canvas');c.width=c.height=A.TS;const x=c.getContext('2d');x.drawImage(A.canvas,A.idx.grass%A.COLS*A.TS,Math.floor(A.idx.grass/A.COLS)*A.TS,A.TS,A.TS,0,0,A.TS,A.TS);const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(300,300);
   ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshBasicMaterial({map:t,color:0xdddddd}));ground.rotation.x=-Math.PI/2;ground.position.set(30,-.07,30);scene.add(ground)}
  // blocky clouds
- {const m=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.92,fog:false});for(let i=0;i<14;i++){const c=new THREE.Mesh(new THREE.BoxGeometry(18+Math.random()*30,3,10+Math.random()*16),m);c.position.set(Math.random()*400-200+30,70+Math.random()*25,Math.random()*400-200+30);scene.add(c);clouds.push(c)}}
+ {const m=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.92,fog:false});for(let i=0;i<14;i++){const c=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),m);c.scale.set(18+Math.random()*22,2+Math.random()*2,8+Math.random()*10);c.position.set(Math.random()*400-200+30,70+Math.random()*25,Math.random()*400-200+30);scene.add(c);clouds.push(c)}}
  E.build();
  const st=RS.S.pos;if(st&&isFinite(st.x)){P.x=st.x;P.y=st.y;P.a=st.a||P.a}
  unstick();

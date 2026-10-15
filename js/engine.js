@@ -66,13 +66,13 @@ E.refreshSeen=()=>{art.forEach((o,i)=>{if(o)paintArt(i)})};
 
 /* ---------- sign textures ---------- */
 function signTex(text,g,opts){
- const c=document.createElement('canvas');c.width=64;c.height=40;const x=c.getContext('2d');x.imageSmoothingEnabled=false;
+ const c=document.createElement('canvas');c.width=512;c.height=320;const x=c.getContext('2d');x.scale(8,8);x.imageSmoothingEnabled=true;
  const acc=D.G[g].accent;x.fillStyle='#1b140c';x.fillRect(0,0,64,40);x.fillStyle=acc;x.fillRect(2,2,60,36);x.fillStyle='#1b140c';x.fillRect(4,4,56,32);
  x.fillStyle='#f3e4bf';x.font='bold 7px monospace';x.textAlign='center';
  const words=text.split(' ');const lines=[];let cur='';words.forEach(w=>{if((cur+' '+w).trim().length>11){lines.push(cur);cur=w}else cur=(cur+' '+w).trim()});lines.push(cur);
  const n=Math.min(lines.length,3);const by=(opts&&opts.legend)?15:21;lines.slice(0,3).forEach((l,i)=>x.fillText(l.slice(0,12),32,by-(n-1)*4+i*9));
  if(opts&&opts.legend){x.fillStyle={gold:'#d4af37',silver:'#c3c9cf',green:'#2f8f58'}[opts.legend];x.fillRect(24,32,16,3)}
- return nearest(new THREE.CanvasTexture(c));
+ const tex=new THREE.CanvasTexture(c);tex.magFilter=tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;return tex;
 }
 
 /* ---------- build ---------- */
@@ -84,7 +84,7 @@ E.build=function(){
  Object.keys(CH).forEach(k=>{const ch=CH[k];if(!ch.n)return;const m=new THREE.Mesh(W.buildGeometry(ch),mat);m.matrixAutoUpdate=false;scene.add(m)});
  // paintings
  Object.values(W.artSpots).forEach(sp=>{
-  const i=sp.i;const c=document.createElement('canvas');c.width=AW;c.height=AH;const ctx=c.getContext('2d',{willReadFrequently:true});
+  const i=sp.i;const c=document.createElement('canvas');c.width=AW*4;c.height=AH*4;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.scale(4,4);
   const tex=new THREE.CanvasTexture(c);tex.magFilter=tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;art[i]={canvas:c,ctx,tex,img:null};
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(sp.w,sp.h),new THREE.MeshBasicMaterial({map:tex,color:new THREE.Color(sp.light*.98,sp.light*.98,sp.light*.98)}));
   const off=.03;mesh.position.set(sp.x+sp.nx*off,sp.z,sp.y+sp.ny*off);
@@ -101,7 +101,7 @@ E.build=function(){
  // hanging staircase signs
  (W.hang||[]).forEach(h=>{const tex=signTex(h.text,h.g);const m=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.81),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));m.position.set(h.x,h.z,h.y);m.rotation.y=-Math.PI/2;scene.add(m)});
  // front banner
- {const c=document.createElement('canvas');c.width=128;c.height=20;const x=c.getContext('2d');x.fillStyle='#1b140c';x.fillRect(0,0,128,20);x.fillStyle='#d4af37';x.fillRect(1,1,126,18);x.fillStyle='#1b140c';x.fillRect(3,3,122,14);x.fillStyle='#f3d98a';x.font='bold 10px monospace';x.textAlign='center';x.fillText('THE ROARING SOCIETY',64,14);
+ {const c=document.createElement('canvas');c.width=1024;c.height=160;const x=c.getContext('2d');x.scale(8,8);x.fillStyle='#1b140c';x.fillRect(0,0,128,20);x.fillStyle='#d4af37';x.fillRect(1,1,126,18);x.fillStyle='#1b140c';x.fillRect(3,3,122,14);x.fillStyle='#f3d98a';x.font='bold 10px monospace';x.textAlign='center';x.fillText('THE ROARING SOCIETY',64,14);
   const m=new THREE.Mesh(new THREE.PlaneGeometry(5.6,.88),new THREE.MeshBasicMaterial({map:nearest(new THREE.CanvasTexture(c))}));m.position.set(30,4.55,60.05);scene.add(m);}
  // door leaves
  S.doors=[];const leafGeo=W.boxGeo(.86,3.28,.08,'door',.95);

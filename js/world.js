@@ -122,7 +122,7 @@ W.buildGeometry=function(ch){
  g.setAttribute('uv',new THREE.Float32BufferAttribute(ch.uv,2));
  g.setAttribute('color',new THREE.Float32BufferAttribute(ch.col,3));
  g.setIndex(ch.n>65000?new THREE.Uint32BufferAttribute(ch.idx,1):new THREE.Uint16BufferAttribute(ch.idx,1));
- g.computeBoundingSphere();g.computeBoundingBox();return g;
+ g.computeVertexNormals();g.computeBoundingSphere();g.computeBoundingBox();return g;
 };
 /* standalone textured box geometry (for animated doors, NPC parts): tile string, size in metres, centred on origin */
 W.boxGeo=function(w,h,d,tile,light){
