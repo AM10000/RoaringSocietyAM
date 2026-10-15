@@ -25,8 +25,8 @@ function stopMusic(){clearInterval(musicTimer);musicTimer=null}
 RS.setAudio=()=>{if(master)master.gain.value=S.settings.vol;if(musicGain)musicGain.gain.value=S.settings.music*.25;if(S.settings.music<=0)stopMusic();else if(!E.paused)startMusic()};
 /* narration with captions */
 RS.narrate=function(text){
- const cap=$('#captions');if(S.settings.captions&&cap){cap.textContent=text;cap.hidden=false;clearTimeout(RS._capT);RS._capT=setTimeout(()=>{cap.hidden=true},Math.max(4000,text.length*70))}
- try{if('speechSynthesis' in window&&S.settings.vol>0){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=1;u.volume=Math.min(1,S.settings.vol);speechSynthesis.speak(u)}}catch(e){}
+ if(!text)return;const cap=$('#captions');clearTimeout(RS._capT);if(cap){cap.hidden=!S.settings.captions;if(S.settings.captions){cap.textContent=text;RS._capT=setTimeout(()=>{cap.hidden=true},Math.max(4000,text.length*70))}}
+ try{if('speechSynthesis' in window&&S.settings.vol>0){speechSynthesis.cancel();speechSynthesis.resume();const u=new SpeechSynthesisUtterance(text);u.rate=1;u.volume=Math.min(1,S.settings.vol);RS._narration=u;u.onend=u.onerror=()=>{if(RS._narration===u)RS._narration=null};speechSynthesis.speak(u)}}catch(e){}
 };
 const INTRO={0:'Welcome to The Roaring Society. Gold frames hold primary sources, silver frames secondary sources, and green plaques hold evidence. Press T to teleport at any time.',
  1:'Gallery I. During the First World War, factory jobs in the North and oppression in the South set the Great Migration in motion. That movement sharpened racial conflict.',
@@ -42,7 +42,7 @@ const INTRO={0:'Welcome to The Roaring Society. Gold frames hold primary sources
 const banner=$('#banner'),prompt_=$('#prompt'),cross=$('#cross'),tracker=$('#tracker'),mini=$('#minimap'),mctx=mini.getContext('2d');
 let fog=new Uint8Array(E.N*E.N);try{const f=RS.ls.get('rs-fog');if(f&&f.length===E.N*E.N)for(let i=0;i<f.length;i++)fog[i]=f.charCodeAt(i)-48}catch(e){}
 function saveFog(){let s='';for(let i=0;i<fog.length;i++)s+=fog[i];RS.ls.set('rs-fog',s)}
-let bannerT=0;
+let bannerT=0,narratedGallery=null;
 function showBanner(t,acc){banner.textContent=t;banner.style.setProperty('--acc',acc);banner.classList.add('show');clearTimeout(bannerT);bannerT=setTimeout(()=>banner.classList.remove('show'),3500)}
 RS.on('zone',z=>{
  const g=z.g;
@@ -54,7 +54,8 @@ RS.on('zone',z=>{
  if(g!==9&&g<8)E.loadGallery(g);
  // preload neighbours
  const nb={1:[0,2],2:[1,3],3:[2,4],4:[3,5],5:[4]}[g]||[];nb.forEach(n=>n>0&&E.loadGallery(n));
- if(!S['intro'+g]){S['intro'+g]=true;RS.narrate(INTRO[g])}
+ // Speak once per gallery entry; room changes and in-gallery teleports stay quiet.
+ if(g!==narratedGallery){narratedGallery=g;RS.narrate(INTRO[g])}
  RS.save();RS.emit('zone.entered',z);
 });
 
@@ -71,7 +72,7 @@ function drawMini(){
   const v=E.map[i];const fx=(dx+R-(P.x-px-.5)+.0)*Z,fy=(dy+R-(P.y-py-.5))*Z;
   if(v===0){const fg=E.floorId[i];mctx.fillStyle=fg===9?'#3f5a2e':fg===255?'#000':'#3a2d1e';mctx.fillRect(fx,fy,Z+1,Z+1)}
   else if(v>=100&&v<200){mctx.fillStyle=D.A[v-100].frame==='gold'?'#d4af37':D.A[v-100].frame==='silver'?'#c3c9cf':'#2f8f58';mctx.fillRect(fx,fy,Z+1,Z+1)}
-  else if(v===90){mctx.fillStyle='#6b4a28';mctx.fillRect(fx,fy,Z+1,Z+1)}
+  else if(v===90){mctx.fillStyle=D.G[E.floorId[i]].accent;mctx.globalAlpha=.7;mctx.fillRect(fx,fy,Z+1,Z+1);mctx.globalAlpha=1}
   else{const g=Math.max(0,Math.min(7,(v>=200?E.signs[v-200].g:v-1)));mctx.fillStyle=D.G[g].accent;mctx.globalAlpha=.7;mctx.fillRect(fx,fy,Z+1,Z+1);mctx.globalAlpha=1}
  }
  // pinned quest markers & stations
@@ -81,19 +82,11 @@ function drawMini(){
  // player
  mctx.save();mctx.translate(mini.width/2,mini.height/2);mctx.rotate(P.a+Math.PI/2);mctx.fillStyle='#ff5252';mctx.beginPath();mctx.moveTo(0,-6);mctx.lineTo(5,5);mctx.lineTo(-5,5);mctx.closePath();mctx.fill();mctx.restore();
 }
-const MARK={'q1':'migration'};
-function questMarker(q){
- // marker: first station or gallery centre related to the quest
- const o=q.obj[0];let id=null;
- if(o.k==='sim')id=o.id==='source3'?'source3':o.id;
- if(q.disc.k==='station')id=q.disc.id;
- if(id&&E.stationSprites[id])return [E.stationSprites[id].x,E.stationSprites[id].y];
- const org=E.ORIGIN[q.g];return org?[org[0]+10,org[1]+10]:null;
-}
+function questMarker(q){const p=RS.questPlace(q);return p&&p.x!==undefined?[p.x,p.y]:null}
 const pinned=()=>(S.pins||[]).map(id=>RS.quests.find(q=>q.id===id)).filter(q=>q&&S.quests[q.id]==='active');
 function drawTracker(){
  const p=pinned();tracker.innerHTML='';tracker.hidden=!p.length;
- p.forEach(q=>{const d=el('div',{class:'tq'},[el('b',{},[q.title])]);q.obj.forEach(o=>d.append(el('div',{class:RS.objDone(o)?'ok':''},[(RS.objDone(o)?'✓ ':'○ ')+o.l])));tracker.append(d)});
+ p.forEach(q=>{const d=el('div',{class:'tq'},[el('b',{},[q.title])]);q.obj.forEach(o=>d.append(el('div',{class:RS.objDone(o)?'ok':''},[(RS.objDone(o)?'✓ ':'○ ')+o.l])));d.append(el('div',{class:'quest-location'},[RS.questPlace(q).text]));tracker.append(d)});
 }
 RS.on('quests.changed',drawTracker);
 RS.on('artwork.viewed',drawTracker);RS.on('act.completed',drawTracker);RS.on('sim.completed',drawTracker);RS.on('item.collected',drawTracker);RS.on('station',drawTracker);
@@ -107,7 +100,7 @@ function targetInfo(t){
  if(t.type==='wall'){
   if(t.cell>=200){const s=E.signs[t.cell-200];return {text:s.opts.tele?'E: Teleport menu':'E: Read sign'}}
   if(t.cell>=100){const a=D.A[t.cell-100];const seen=S.seen.includes(a.id);return {text:'E: Examine — '+RS.strip(a.title)+(seen?' ✓':''),shape:a.frame}}
-  if(t.cell===90){return {text:'E: Investigate loose panel'}}
+  if(t.cell===90){return {text:'E: Inspect joinery'}}
  }
  if(t.type==='sprite'){const s=t.s;if(s.kind==='item')return {text:'E: Pick up — '+s.label};if(s.kind==='docent')return {text:'E: Talk to docent'};if(s.kind==='npc-talk')return {text:'E: Talk'};return {text:'E: '+s.label}}
 }
@@ -129,7 +122,7 @@ E.onInteract=function(t){
   const s=t.s;
   if(s.kind==='item'){RS.collect(s.gal,s.key);s.visible=false;return}
   if(s.kind==='docent')return docent(s);
-  if(s.kind==='npc-talk'){RS.markStation('rumor');bubble('“Psst. Looking for the Blind Pig? Knock twice quick, then once slow. Then say the password.”');S.clue5=true;RS.save();return}
+  if(s.kind==='npc-talk'){RS.markStation('rumor');RS.overlay('Cigar-shop clerk',el('div',{class:'prose'},[el('p',{},['“Psst. Looking for the Blind Pig? Knock twice quick, then once slow. Then say the password.”'])]));S.clue5=true;RS.save();return}
   if(s.kind==='station')return station(s.id);
  }
 };
@@ -144,7 +137,7 @@ function frameGuide(){const w=el('div',{class:'prose'});
 function docent(s){
  const lines=D.DIALOGUE.docent[s.gal];s.talk=(s.talk||0);
  const line=lines[Math.min(s.talk,lines.length-1)];if(s.talk<lines.length)s.talk++;
- bubble('Docent: “'+line+'”');RS.markStation('docent'+s.gal);
+ RS.overlay('Museum docent',el('div',{class:'prose'},[el('p',{},['Docent: “'+line+'”'])]));RS.markStation('docent'+s.gal);
 }
 function secret(g){
  if(S.secretOpen[g])return;
@@ -170,6 +163,7 @@ function station(id){
   case 'telescope':return G.telescope();
   case 'nickelodeon':return G.nickelodeon();
   case 'fountain':bubble('A pixel fountain splashes quietly.');return;
+  case 'makers':return G.makers();
   case 'vaultcredits':return G.credits();
   default:bubble('Nothing to do here yet.');
  }
@@ -258,10 +252,11 @@ G.nickelodeon=function(){
  RS.markStation('newsreel');
 };
 G.credits=function(){
- const w=el('div',{class:'prose'},[el('h3',{},['Credits & behind-the-scenes']),el('p',{},['The Roaring Society is a browser-based museum game built from a research project on social conflict and civil liberties in 1920s America. All items are labeled replicas. Images come from Wikimedia Commons and the Library of Congress and National Archives collections hosted there; each image credit appears on its Source Card.']),
+ const w=el('div',{class:'prose'},[el('h3',{},['Credits & behind-the-scenes']),el('p',{},['Created by '+RS.CREATORS.join(', ')+'.']),el('p',{},['The Roaring Society is a browser-based museum game built from a research project on social conflict and civil liberties in 1920s America. All items are labeled replicas. Images come from Wikimedia Commons and the Library of Congress and National Archives collections hosted there; each image credit appears on its Source Card.']),
   el('h4',{},['Full bibliography (MLA)']),G.bibList()]);
  RS.overlay('Curator’s Vault',w);document.exitPointerLock&&document.exitPointerLock();
 };
+G.makers=function(){RS.award('easter-egg:makers',20,'Found the makers’ signature');RS.overlay('The makers’ signature',el('div',{class:'prose'},[el('p',{},['Tucked behind the Archive Stacks is a small dedication.']),el('h3',{},['Roaring Society']),el('p',{},['Created by '+RS.CREATORS.join(', ')+'.']),el('p',{},['Thank you for exploring our museum.'])]))};
 G.bibList=function(){const w=el('div',{});['primary','secondary'].forEach(k=>{w.append(el('h5',{},[k==='primary'?'Primary sources':'Secondary sources']));D.BIB.filter(b=>b.kind===k).forEach(b=>w.append(el('p',{class:'bib',html:b.mla})))});return w};
 G.passport=function(){
  const w=el('div',{class:'prose'},[el('h3',{},['Visitor Passport']),el('p',{},['Earn a stamp by completing each gallery’s main quests (hidden passages are optional for the stamp).'])]);
@@ -287,10 +282,10 @@ G.questBook=function(tab){
  const tabs=[[0,'Courtyard & Extras'],[1,'Gallery I'],[2,'Gallery II'],[3,'Gallery III'],[4,'Gallery IV'],[5,'Gallery V'],[6,'Research']];
  const disc=Object.keys(S.quests).length;
  const w=el('div',{class:'qb'});
- w.append(el('p',{class:'qb-count'},['Discovered '+disc+' of about '+RS.quests.length+' · Curator Points: '+S.points]));
+ w.append(el('p',{class:'qb-count'},['Discovered '+disc+' of '+RS.quests.length+' · Curator Points: '+S.points]));
  const tb=el('div',{class:'qb-tabs',role:'tablist'});tabs.forEach(t=>tb.append(el('button',{role:'tab','aria-selected':t[0]===qbTab,class:'tab'+(t[0]===qbTab?' on':''),onclick:()=>G.questBook(t[0])},[t[1]])));
  tb.append(el('button',{role:'tab',class:'tab'+(qbTab===7?' on':''),onclick:()=>G.questBook(7)},['Synthesis']));
- w.append(tb);
+ w.append(el('p',{class:'score-rules'},['Earn 25 points per completed quest, 5 per newly explored area and 25 per hidden room. Each reward is counted once. Pin a quest to see its next destination on your minimap.']),tb);
  const list=el('div',{class:'qb-list'});
  const qs=RS.quests.filter(q=>qbTab===7?q.id==='q0-6':(q.g===qbTab&&q.id!=='q0-6'));
  qs.forEach(q=>{const st=RS.questState(q.id);
@@ -300,8 +295,8 @@ G.questBook=function(tab){
   q.obj.forEach(o=>{
    const d=RS.objDone(o);const row=el('div',{class:'q-obj'+(d?' ok':'')},[(d?'✓ ':'○ ')+o.l]);
    if(!d&&o.k==='act')row.append(el('button',{class:'btn sm',onclick:()=>{RS.closeOverlay();Sims.activity(o.id,()=>G.questBook())}},['Start activity']));
-   c.append(row)});
-  c.append(el('div',{class:'q-reward'},['Reward: '+q.reward]));
+   row.append(el('div',{class:'quest-location'},[RS.questDirections(q,o)]));c.append(row)});
+  c.append(el('div',{class:'q-reward'},['Reward: 25 Curator Points'+(q.reward==='Curator Points'?'':' · '+q.reward)]));
   if(st==='active'){const pb=el('button',{class:'btn sm',onclick:()=>{S.pins=S.pins||[];const i=S.pins.indexOf(q.id);if(i>=0)S.pins.splice(i,1);else{S.pins.push(q.id);if(S.pins.length>3)S.pins.shift()}RS.save();drawTracker();G.questBook()}},[(S.pins||[]).includes(q.id)?'Unpin from HUD':'Pin to HUD']);c.append(pb)}
   else{c.append(el('div',{class:'q-learn'},[el('b',{},['What you learned: ']),q.journal]));
    const links=el('div',{});q.obj.forEach(o=>(o.ids||[]).forEach(id=>{const a=D.byId[id];if(a)links.append(el('button',{class:'link',onclick:()=>{RS.closeOverlay();RS.openArtwork(id)}},[RS.strip(a.title)]))}));c.append(links)}
@@ -345,7 +340,7 @@ G.settings=function(){
  const w=el('div',{class:'settings'},[
   slider('Mouse / turn sensitivity','sens',.3,2.5,.1),slider('Text size','text',.9,1.6,.05,v=>Math.round(v*100)+'%'),slider('Master volume','vol',0,1,.05,v=>Math.round(v*100)+'%'),slider('Music volume','music',0,1,.05,v=>Math.round(v*100)+'%'),
   check('Captions for narration and audio','captions'),check('Reduced motion (no head bob, fades)','reducedMotion'),check('High-contrast interface','contrast'),check('Head bob','bob'),
-  el('label',{class:'set-row'},['Render quality ',el('select',{onchange:e=>{s.quality=+e.target.value;E.resize();RS.save()}},[el('option',{value:1,selected:s.quality===1?'selected':false},['Full resolution']),el('option',{value:0,selected:s.quality===0?'selected':false},['Fast (lower resolution)'])])]),
+  el('label',{class:'set-row'},['Render quality ',el('select',{onchange:e=>{s.quality=+e.target.value;E.resize();RS.save()}},[el('option',{value:1,selected:s.quality===1?'selected':false},['Smooth (recommended)']),el('option',{value:0,selected:s.quality===0?'selected':false},['Fast (lower resolution)'])])]),
   el('div',{class:'set-actions'},[el('button',{class:'btn ghost',onclick:()=>{if(confirm('Erase all saved progress?'))RS.reset()}},['Reset progress'])]),
   el('p',{class:'small'},['Colorblind-safe: markers use shape and color. Full keyboard support: Tab through menus, Enter to select, Esc to close.'])]);
  RS.overlay('Settings',w);
@@ -371,7 +366,7 @@ G.help=function(){
  const t=el('table',{class:'ctl'});rows.forEach(r=>t.append(el('tr',{},[el('th',{},[r[0]]),el('td',{},[r[1]])])));
  RS.overlay('Controls',el('div',{class:'prose'},[t,el('p',{},['Gold frames are primary sources, silver frames are secondary sources, and green plaques are evidence panels.'])]));
 };
-G.exit=function(){E.paused=true;saveAll();$('#game').hidden=true;document.body.classList.remove('playing');document.exitPointerLock&&document.exitPointerLock();stopMusic();window.scrollTo(0,0)};
+G.exit=function(){narratedGallery=null;E.paused=true;saveAll();$('#game').hidden=true;document.body.classList.remove('playing');document.exitPointerLock&&document.exitPointerLock();stopMusic();window.scrollTo(0,0)};
 function saveAll(){E.savePos();saveFog();RS.save()}
 
 /* ---------------- boot ---------------- */
@@ -382,7 +377,7 @@ G.start=function(){
  $('#start-card').hidden=!!G.seenStart;
  if(!G.seenStart){E.paused=true}
 };
-G.begin=function(){G.seenStart=true;$('#start-card').hidden=true;E.paused=false;audio();if(AC&&AC.state==='suspended')AC.resume();startMusic();if(!E.touch)G.resume();if(!S.visited.length){S.visited.push('z0')}RS.emit('zone',{g:E.blockAt(Math.floor(E.player.x),Math.floor(E.player.y)),room:0})};
+G.begin=function(){G.seenStart=true;$('#start-card').hidden=true;E.paused=false;audio();if(AC&&AC.state==='suspended')AC.resume();startMusic();if(!E.touch)G.resume();E.notifyZone(true)};
 document.addEventListener('pointerlockchange',()=>{
  if(!G.booted||$('#game').hidden)return;
  if(document.pointerLockElement!==E.canvas&&!E.paused&&!RS.isModal()&&!G.skipPause&&!E.touch)G.pause();
@@ -396,8 +391,9 @@ document.addEventListener('keydown',e=>{
  else if(k==='q'){G.questBook()}else if(k==='i'){G.inventory()}else if(k==='m'){G.fullMap()}else if(k==='t'){G.teleportMenu()}
  else if(k==='escape'){G.pause()}
 });
-RS.on('overlay.close',()=>{if(!E.paused&&$('#game').hidden===false&&!RS.isModal()&&!E.touch){setTimeout(()=>{if(!document.pointerLockElement&&!RS.isModal()&&!$('#start-card').offsetParent){try{E.canvas.requestPointerLock()}catch(e){}}},50)}});
-RS.on('viewer.close',()=>{if(!E.paused&&!RS.isModal()&&!E.touch)setTimeout(()=>{try{E.canvas.requestPointerLock()}catch(e){}},50)});
+// Closing a dialog leaves the pointer free; clicking the view resumes mouse look.
+RS.on('overlay.close',()=>{E.target=null});
+RS.on('viewer.close',()=>{E.target=null});
 /* per-frame HUD */
 (function hudLoop(){updatePrompt();requestAnimationFrame(hudLoop)})();
 /* visitor remarks */
