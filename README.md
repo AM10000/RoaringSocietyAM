@@ -40,3 +40,9 @@ Player physics advances at 120Hz with camera-position interpolation and frame-in
 `tests/performance-check.cjs` verifies identical walking distance at 30/60/144 FPS and with a schedule containing 100ms stalls, six meshes per NPC, animated water without recurring texture uploads, two active gallery lights and bounded rendering resolution. Run it with the same Playwright environment variables as the main browser check.
 
 A short local headless Edge comparison at 1019x759 and pixel ratio 1 measured 686 versus 137 draw calls, and a maximum sampled frame interval of 187.4ms versus 7.4ms after the fix. These are measurements from that local run, not a guaranteed frame rate on every device.
+
+## Room-entry narration
+
+Entry announcements play on every room visit, including teleporting into the current room and returning with an existing save. Walking, teleporting and starting a visit share one entry event, preventing duplicate announcements on the next frame. Named gallery rooms use their existing room names and the original gallery introduction. Master volume and captions are respected; old saved intro flags no longer suppress speech.
+
+`tests/narration-check.cjs` captures speech-synthesis requests to check old-save startup, all nine teleport destinations, same-room teleports, walking across a room boundary and back, duplicate suppression, and muted/caption behavior. It does not require an audio device.

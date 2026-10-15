@@ -25,8 +25,8 @@ function stopMusic(){clearInterval(musicTimer);musicTimer=null}
 RS.setAudio=()=>{if(master)master.gain.value=S.settings.vol;if(musicGain)musicGain.gain.value=S.settings.music*.25;if(S.settings.music<=0)stopMusic();else if(!E.paused)startMusic()};
 /* narration with captions */
 RS.narrate=function(text){
- const cap=$('#captions');if(S.settings.captions&&cap){cap.textContent=text;cap.hidden=false;clearTimeout(RS._capT);RS._capT=setTimeout(()=>{cap.hidden=true},Math.max(4000,text.length*70))}
- try{if('speechSynthesis' in window&&S.settings.vol>0){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=1;u.volume=Math.min(1,S.settings.vol);speechSynthesis.speak(u)}}catch(e){}
+ if(!text)return;const cap=$('#captions');clearTimeout(RS._capT);if(cap){cap.hidden=!S.settings.captions;if(S.settings.captions){cap.textContent=text;RS._capT=setTimeout(()=>{cap.hidden=true},Math.max(4000,text.length*70))}}
+ try{if('speechSynthesis' in window&&S.settings.vol>0){speechSynthesis.cancel();speechSynthesis.resume();const u=new SpeechSynthesisUtterance(text);u.rate=1;u.volume=Math.min(1,S.settings.vol);RS._narration=u;u.onend=u.onerror=()=>{if(RS._narration===u)RS._narration=null};speechSynthesis.speak(u)}}catch(e){}
 };
 const INTRO={0:'Welcome to The Roaring Society. Gold frames hold primary sources, silver frames secondary sources, and green plaques hold evidence. Press T to teleport at any time.',
  1:'Gallery I. During the First World War, factory jobs in the North and oppression in the South set the Great Migration in motion. That movement sharpened racial conflict.',
@@ -54,7 +54,9 @@ RS.on('zone',z=>{
  if(g!==9&&g<8)E.loadGallery(g);
  // preload neighbours
  const nb={1:[0,2],2:[1,3],3:[2,4],4:[3,5],5:[4]}[g]||[];nb.forEach(n=>n>0&&E.loadGallery(n));
- if(!S['intro'+g]){S['intro'+g]=true;RS.narrate(INTRO[g])}
+ // Entry announcements repeat on a new room visit; old save flags never suppress them.
+ const roomIntro=g===0||g===9?'':D.G[g].rooms[z.room]+(z.level?' — upper mezzanine':'')+'. ';
+ RS.narrate(roomIntro+INTRO[g]);
  RS.save();RS.emit('zone.entered',z);
 });
 
@@ -376,7 +378,7 @@ G.start=function(){
  $('#start-card').hidden=!!G.seenStart;
  if(!G.seenStart){E.paused=true}
 };
-G.begin=function(){G.seenStart=true;$('#start-card').hidden=true;E.paused=false;audio();if(AC&&AC.state==='suspended')AC.resume();startMusic();if(!E.touch)G.resume();const g=E.blockAt(Math.floor(E.player.x),Math.floor(E.player.y));RS.emit('zone',{g,room:g===0||g===9?0:W.roomAt(g,E.player.x,E.player.y),level:E.player.z>=4.4?1:0})};
+G.begin=function(){G.seenStart=true;$('#start-card').hidden=true;E.paused=false;audio();if(AC&&AC.state==='suspended')AC.resume();startMusic();if(!E.touch)G.resume();E.notifyZone(true)};
 document.addEventListener('pointerlockchange',()=>{
  if(!G.booted||$('#game').hidden)return;
  if(document.pointerLockElement!==E.canvas&&!E.paused&&!RS.isModal()&&!G.skipPause&&!E.touch)G.pause();

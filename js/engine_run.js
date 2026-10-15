@@ -67,7 +67,7 @@ E.teleport=function(x,y,a){
  const pos=Phys.safePosition(x,y,{escape:true});
  if(!pos){RS.toast('This landing is obstructed. Please choose another destination.');return false}
  P.sit=null;P.x=pos.x;P.y=pos.y;if(a!==undefined)P.a=a;P.pitch=0;P.z=0;P.vz=0;P.vxs=0;P.vys=0;P.stepOff=0;
- for(const k in keys)keys[k]=false;E.resetMotion();return true;
+ for(const k in keys)keys[k]=false;E.resetMotion();E.notifyZone(true);return true;
 };
 E.savePos=()=>{RS.S.pos={x:P.x,y:P.y,a:P.a};RS.save()};
 E.interact=function(){
@@ -158,13 +158,15 @@ function updatePlayer(dt){
 }
 function updateWorld(dt){
  E.updateVisitors(dt);
- // zone
- const gx=Math.floor(P.x),gy=Math.floor(P.y);const g=W.blockAt(gx,gy);const lvl=P.z>=4.4?1:0;
- const room=(g===9||g===0)?0:W.roomAt(g,gx,gy);
- const key=g+':'+room+':'+(g===9?0:lvl);
- if(key!==lastZone){lastZone=key;E.zoneG=g;E.zoneRoom=room;E.level=lvl;RS.emit('zone',{g,room,level:lvl})}
+ E.notifyZone();
  pickTarget();
 }
+// Walking, teleporting and beginning a visit share the same entry event.
+E.notifyZone=function(force){
+ const gx=Math.floor(P.x),gy=Math.floor(P.y),g=W.blockAt(gx,gy),level=P.z>=4.4?1:0;
+ const room=g===9||g===0?0:W.roomAt(g,gx,gy),key=g+':'+room+':'+(g===9?0:level);
+ if(force||key!==lastZone){lastZone=key;E.zoneG=g;E.zoneRoom=room;E.level=level;RS.emit('zone',{g,room,level})}
+};
 // Stable 120Hz movement preserves distance through normal frame stalls.
 const movement={step:1/120,accumulator:0,previous:{x:P.x,y:P.y,z:P.z,stepOff:0}};
 E.resetMotion=function(){movement.accumulator=0;Object.assign(movement.previous,{x:P.x,y:P.y,z:P.z,stepOff:P.stepOff})};
