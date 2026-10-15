@@ -42,7 +42,7 @@ const INTRO={0:'Welcome to The Roaring Society. Gold frames hold primary sources
 const banner=$('#banner'),prompt_=$('#prompt'),cross=$('#cross'),tracker=$('#tracker'),mini=$('#minimap'),mctx=mini.getContext('2d');
 let fog=new Uint8Array(E.N*E.N);try{const f=RS.ls.get('rs-fog');if(f&&f.length===E.N*E.N)for(let i=0;i<f.length;i++)fog[i]=f.charCodeAt(i)-48}catch(e){}
 function saveFog(){let s='';for(let i=0;i<fog.length;i++)s+=fog[i];RS.ls.set('rs-fog',s)}
-let bannerT=0;
+let bannerT=0,narratedGallery=null;
 function showBanner(t,acc){banner.textContent=t;banner.style.setProperty('--acc',acc);banner.classList.add('show');clearTimeout(bannerT);bannerT=setTimeout(()=>banner.classList.remove('show'),3500)}
 RS.on('zone',z=>{
  const g=z.g;
@@ -54,9 +54,8 @@ RS.on('zone',z=>{
  if(g!==9&&g<8)E.loadGallery(g);
  // preload neighbours
  const nb={1:[0,2],2:[1,3],3:[2,4],4:[3,5],5:[4]}[g]||[];nb.forEach(n=>n>0&&E.loadGallery(n));
- // Entry announcements repeat on a new room visit; old save flags never suppress them.
- const roomIntro=g===0||g===9?'':D.G[g].rooms[z.room]+(z.level?' — upper mezzanine':'')+'. ';
- RS.narrate(roomIntro+INTRO[g]);
+ // Speak once per gallery entry; room changes and in-gallery teleports stay quiet.
+ if(g!==narratedGallery){narratedGallery=g;RS.narrate(INTRO[g])}
  RS.save();RS.emit('zone.entered',z);
 });
 
@@ -367,7 +366,7 @@ G.help=function(){
  const t=el('table',{class:'ctl'});rows.forEach(r=>t.append(el('tr',{},[el('th',{},[r[0]]),el('td',{},[r[1]])])));
  RS.overlay('Controls',el('div',{class:'prose'},[t,el('p',{},['Gold frames are primary sources, silver frames are secondary sources, and green plaques are evidence panels.'])]));
 };
-G.exit=function(){E.paused=true;saveAll();$('#game').hidden=true;document.body.classList.remove('playing');document.exitPointerLock&&document.exitPointerLock();stopMusic();window.scrollTo(0,0)};
+G.exit=function(){narratedGallery=null;E.paused=true;saveAll();$('#game').hidden=true;document.body.classList.remove('playing');document.exitPointerLock&&document.exitPointerLock();stopMusic();window.scrollTo(0,0)};
 function saveAll(){E.savePos();saveFog();RS.save()}
 
 /* ---------------- boot ---------------- */

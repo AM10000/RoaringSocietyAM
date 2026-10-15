@@ -41,8 +41,8 @@ Player physics advances at 120Hz with camera-position interpolation and frame-in
 
 A short local headless Edge comparison at 1019x759 and pixel ratio 1 measured 686 versus 137 draw calls, and a maximum sampled frame interval of 187.4ms versus 7.4ms after the fix. These are measurements from that local run, not a guaranteed frame rate on every device.
 
-## Room-entry narration
+## Gallery-entry narration
 
-Entry announcements play on every room visit, including teleporting into the current room and returning with an existing save. Walking, teleporting and starting a visit share one entry event, preventing duplicate announcements on the next frame. Named gallery rooms use their existing room names and the original gallery introduction. Master volume and captions are respected; old saved intro flags no longer suppress speech.
+The original gallery introduction plays once on entry to a gallery, by walking or teleporting. Moving between rooms or floors, or teleporting inside the same gallery, does not restart it. Leaving and re-entering the gallery plays it again. Master volume and captions are respected; old saved intro flags do not suppress a new gallery visit.
 
-`tests/narration-check.cjs` captures speech-synthesis requests to check old-save startup, all nine teleport destinations, same-room teleports, walking across a room boundary and back, duplicate suppression, and muted/caption behavior. It does not require an audio device.
+`tests/narration-check.cjs` captures speech-synthesis requests to check old-save startup, all nine destinations, quiet transitions within a gallery, walking between galleries, repeat-entry behavior and muted/caption behavior. It also verifies that the Bibliography Wall renders the planned book titles in italics rather than displaying literal HTML tags. No audio device is required for these checks.
