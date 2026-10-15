@@ -36,7 +36,7 @@ Engine.build=function(){build();const scene=Engine._.scene;
    add(new THREE.CylinderGeometry(.11,.17,.28,16),bulb,xx,8.25,zz);
    add(new THREE.CylinderGeometry(.025,.025,.35,8),brass,xx,8,zz);
   }
-  const light=new THREE.PointLight(0xffdcaa,.5,17,2);light.position.set(px,7.7,pz);scene.add(light);
+  const light=new THREE.PointLight(0xffdcaa,.5,17,2);light.position.set(px,7.7,pz);light.visible=g<2;scene.add(light);(Engine._.galleryLights||(Engine._.galleryLights=[])).push(light);
  }
  // The makers’ signature is only discoverable inside the hidden Archive Stacks.
  const [mx,my]=World.ORIGIN[6],c=document.createElement('canvas');c.width=1024;c.height=512;const ctx=c.getContext('2d');

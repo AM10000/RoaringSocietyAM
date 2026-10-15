@@ -18,6 +18,17 @@ const shade=(hex,f)=>{const c=new THREE.Color(hex);c.multiplyScalar(f);return '#
 const lighten=(hex,f)=>{const c=new THREE.Color(hex);c.lerp(new THREE.Color('#ffffff'),f);return '#'+c.getHexString()};
 function rnd(seed){let s=(seed*2654435761)>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
 
+// Each animated body part uses one vertex-coloured mesh instead of a draw call per detail.
+const figureMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.82});
+function batchPart(part){
+ const meshes=part.children.filter(m=>m.isMesh);if(!meshes.length)return;
+ const position=[],normal=[],color=[];
+ for(const m of meshes){m.updateMatrix();const geo=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();geo.applyMatrix4(m.matrix);const p=geo.attributes.position.array,n=geo.attributes.normal.array,c=m.material.color;
+  for(const v of p)position.push(v);for(const v of n)normal.push(v);for(let i=0;i<p.length/3;i++)color.push(c.r,c.g,c.b);part.remove(m);geo.dispose();
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(position,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normal,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(color,3));geometry.computeBoundingSphere();part.add(new THREE.Mesh(geometry,figureMaterial));
+}
+
 NPC.make=function(pal,opts){
  opts=opts||{};const r=rnd((opts.seed||1)+7);const [coat,skin,pants]=pal;
  const gold=!!opts.gold,clerk=opts.role==='clerk';
@@ -83,6 +94,7 @@ NPC.make=function(pal,opts){
  // handbag / newspaper accents
  if(female&&r()<.6){armR.add(mesh(bx(.1,.12,.05),'#4a2a1a',.04,-.62,.04))}
  else if(!female&&!gold&&!clerk&&r()<.3){armL.add(mesh(bx(.16,.02,.12),'#e8e0c8',.06,-.6,0))}
+ [legL,legR,armL,armR,head,torso].forEach(batchPart);
  body.add(legL,legR,torso,armL,armR);
  root.userData={legL,legR,armL,armR,head,body,torso};
  return root;

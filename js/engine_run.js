@@ -22,6 +22,10 @@ E.init=function(cv){
  const tex=new THREE.CanvasTexture(A.canvas);tex.magFilter=tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;tex.encoding=THREE.sRGBEncoding;tex.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());A.texture=tex;
  const roughnessMap=A.roughnessCanvas?new THREE.CanvasTexture(A.roughnessCanvas):null,metalnessMap=A.metalnessCanvas?new THREE.CanvasTexture(A.metalnessCanvas):null;
  for(const map of [roughnessMap,metalnessMap])if(map){map.generateMipmaps=false;map.minFilter=map.magFilter=THREE.LinearFilter}
+ const waterTexture=new THREE.CanvasTexture(A.waterCanvas);waterTexture.encoding=THREE.sRGBEncoding;waterTexture.wrapS=waterTexture.wrapT=THREE.RepeatWrapping;A.waterTexture=waterTexture;
+ S.waterMat=new THREE.MeshStandardMaterial({map:waterTexture,vertexColors:true,roughness:.25,metalness:.15});
+ S.waterMat.onBeforeCompile=shader=>{shader.uniforms.waterTime=A.waterTime;shader.fragmentShader='uniform float waterTime;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',THREE.ShaderChunk.map_fragment.replace('texture2D( map, vUv )','texture2D( map, vUv + vec2(sin(waterTime + vUv.y * 12.0), cos(waterTime * .8 + vUv.x * 10.0)) * .015 )'))};
+ S.waterMat.customProgramCacheKey=()=> 'museum-water';
  S.mat=new THREE.MeshStandardMaterial({map:tex,vertexColors:true,roughness:roughnessMap?1:.75,metalness:metalnessMap?1:.025,roughnessMap,metalnessMap,bumpMap:tex,bumpScale:.009});
  // lights for the blocky people
  scene.add(new THREE.HemisphereLight(0xe5edf6,0x77634d,1.15));const dl=new THREE.DirectionalLight(0xfff2d8,.55);dl.position.set(-3,6,4);scene.add(dl);
@@ -36,7 +40,7 @@ E.init=function(cv){
  E.build();
  scene.traverse(o=>{if(o.material){const materials=Array.isArray(o.material)?o.material:[o.material];materials.forEach(m=>{if(m.isMeshStandardMaterial)m.envMapIntensity=.28})}});
  const st=RS.S.pos;if(st&&isFinite(st.x)){P.x=st.x;P.y=st.y;P.a=st.a||P.a}
- unstick();
+ unstick();E.resetMotion();
  E.npcs.forEach(n=>{const pos=Phys.safePosition(n.x,n.y,{gallery:n.gal,radius:.4});if(pos){n.x=pos.x;n.y=pos.y}n.state='wait';n.path=[];n.moving=false});
  // input
  window.addEventListener('keydown',e=>{if(RS.isModal()||E.paused)return;const k=e.key.toLowerCase();keys[k]=true;if(k===' '){P.jumpReq=true}if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault()});
@@ -49,8 +53,9 @@ E.init=function(cv){
 };
 E.resize=function(){
  if(!renderer)return;const q=RS.S.settings.quality;const dpr=window.devicePixelRatio||1;
- renderer.setPixelRatio(q===0?Math.min(.85,dpr):Math.min(dpr,2));
  const w=canvas.clientWidth||innerWidth,h=canvas.clientHeight||innerHeight;
+ // Keep high-density screens from multiplying the fragment workload fourfold.
+ renderer.setPixelRatio(q===0?Math.min(.85,dpr):Math.min(dpr,1.5,Math.sqrt(2000000/(w*h))));
  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
 };
 function unstick(){
@@ -62,7 +67,7 @@ E.teleport=function(x,y,a){
  const pos=Phys.safePosition(x,y,{escape:true});
  if(!pos){RS.toast('This landing is obstructed. Please choose another destination.');return false}
  P.sit=null;P.x=pos.x;P.y=pos.y;if(a!==undefined)P.a=a;P.pitch=0;P.z=0;P.vz=0;P.vxs=0;P.vys=0;P.stepOff=0;
- for(const k in keys)keys[k]=false;return true;
+ for(const k in keys)keys[k]=false;E.resetMotion();return true;
 };
 E.savePos=()=>{RS.S.pos={x:P.x,y:P.y,a:P.a};RS.save()};
 E.interact=function(){
@@ -100,10 +105,11 @@ function pickTarget(){
 function eye(){return P.sit?.8:Phys.EYE}
 
 /* ---------- NPC behaviour ---------- */
+let routeBudget=1;
 function updateNpc(n,dt){
  const radius=.38;n.t-=dt;n.moving=false;
  if(n.state==='wait'){
-  if(n.t>0)return;const g=n.gal;let tx,ty;n.admire=false;
+  if(n.t>0||routeBudget<=0)return;routeBudget--;const g=n.gal;let tx,ty;n.admire=false;
   if(g!==9&&Math.random()<.6){const list=Object.values(W.artSpots).filter(s=>s.g===g&&s.level===0);if(list.length){const s=list[Math.floor(Math.random()*list.length)];tx=s.x+s.nx*1.9;ty=s.y+s.ny*1.9;n.admire=true;n.look=Math.atan2(-s.ny,-s.nx)}}
   if(tx===undefined){const o=W.ORIGIN[g];tx=o[0]+3+Math.random()*14;ty=o[1]+3+Math.random()*14}
   n.path=Phys.route(n.x,n.y,tx,ty,g,radius);n.state=n.path.length?'walk':'wait';n.t=n.path.length?40:1+Math.random()*2;
@@ -122,11 +128,11 @@ function updateNpc(n,dt){
   if(n.t<=0){n.state='wait';n.t=.5+Math.random()*2}
  }
 }
-E.updateVisitors=function(dt){E.npcs.forEach(n=>updateNpc(n,dt))};
+E.updateVisitors=function(dt){routeBudget=1;E.npcs.forEach(n=>updateNpc(n,dt))};
 
 /* ---------- per-frame ---------- */
 let lastZone='',time=0;
-function update(dt){
+function updatePlayer(dt){
  if(P.sit){
   if(keys['w']||keys['s']||keys['a']||keys['d']||P.jumpReq||(E.joy&&Math.hypot(E.joy.x,E.joy.y)>.4)||keys['arrowup']||keys['arrowdown']){stand();P.jumpReq=false}
  }
@@ -144,12 +150,13 @@ function update(dt){
   let vx=dx*mv-dy*st,vy=dy*mv+dx*st;const l=Math.hypot(vx,vy);if(l>1){vx/=l;vy/=l}
   // some air control only
   const gnd=P.grounded;const ax=gnd?1:.6;
-  P.vxs=(P.vxs||0)+(vx*sp-(P.vxs||0))*Math.min(1,dt*(gnd?14:3));P.vys=(P.vys||0)+(vy*sp-(P.vys||0))*Math.min(1,dt*(gnd?14:3));
+  P.vxs=(P.vxs||0)+(vx*sp-(P.vxs||0))*(1-Math.exp(-dt*(gnd?18:3)));P.vys=(P.vys||0)+(vy*sp-(P.vys||0))*(1-Math.exp(-dt*(gnd?18:3)));
   Phys.step(P,P.vxs,P.vys,dt,P.jumpReq);P.jumpReq=false;
   E.moving=l>.05&&P.grounded;
  }else{E.moving=false}
  P.stepOff*=Math.exp(-dt*12);
- // npcs
+}
+function updateWorld(dt){
  E.updateVisitors(dt);
  // zone
  const gx=Math.floor(P.x),gy=Math.floor(P.y);const g=W.blockAt(gx,gy);const lvl=P.z>=4.4?1:0;
@@ -158,9 +165,20 @@ function update(dt){
  if(key!==lastZone){lastZone=key;E.zoneG=g;E.zoneRoom=room;E.level=lvl;RS.emit('zone',{g,room,level:lvl})}
  pickTarget();
 }
+// Stable 120Hz movement preserves distance through normal frame stalls.
+const movement={step:1/120,accumulator:0,previous:{x:P.x,y:P.y,z:P.z,stepOff:0}};
+E.resetMotion=function(){movement.accumulator=0;Object.assign(movement.previous,{x:P.x,y:P.y,z:P.z,stepOff:P.stepOff})};
+E.advance=function(dt){
+ movement.accumulator+=Math.max(0,Math.min(.25,dt));
+ while(movement.accumulator+1e-9>=movement.step){Object.assign(movement.previous,{x:P.x,y:P.y,z:P.z,stepOff:P.stepOff});updatePlayer(movement.step);movement.accumulator-=movement.step}
+ updateWorld(dt);
+};
+E.renderPosition=function(){const a=Math.max(0,Math.min(1,movement.accumulator/movement.step)),prev=movement.previous;return {x:prev.x+(P.x-prev.x)*a,y:prev.y+(P.y-prev.y)*a,z:prev.z+(P.z-prev.z)*a,stepOff:prev.stepOff+(P.stepOff-prev.stepOff)*a}};
+let lightTick=0;
 function animate(dt){
  time+=dt;
  A.animate(dt);
+ lightTick-=dt;if(lightTick<=0&&S.galleryLights){lightTick=.5;const near=S.galleryLights.map(l=>({l,d:(l.position.x-P.x)**2+(l.position.z-P.y)**2})).sort((a,b)=>a.d-b.d);S.galleryLights.forEach(l=>l.visible=l===near[0].l||l===near[1].l)}
  // doors open as you approach
  S.doors.forEach(d=>{const dist=Math.hypot(P.x-d.cx,P.y-d.cy);const tgt=dist<(d.front?5.5:4.2)?1:0;d.open+=(tgt-d.open)*Math.min(1,dt*6);
   [d.a,d.b].forEach(l=>{const th=l.c+(l.o-l.c)*d.open;l.g.rotation.y=-th})});
@@ -171,7 +189,10 @@ function animate(dt){
  const pt=time;
  for(const s of E.sprites){if(!s.model)continue;
   const dxp=P.x-s.x,dyp=P.y-s.y,dp=Math.hypot(dxp,dyp);
-  s.model.visible=dp<46;if(dp>46)continue;
+  // Refresh body visibility periodically; walls hide visitors in other wings.
+  s.cullTimer=(s.cullTimer||0)-dt;
+  if(s.cullTimer<=0){s.cullTimer=.18;s.model.visible=dp<30&&(Phys.los(P.x,P.y,P.z+Phys.EYE,s.x,s.y,1.65)||Phys.los(P.x,P.y,P.z+Phys.EYE,s.x,s.y,1.05))}
+  if(!s.model.visible)continue;
   if(s.kind==='visitor'){s.model.position.set(s.x,0,s.y);const hd=s.heading||0;s.model.rotation.y=-hd;NPC.animate(s.model,pt+s.x,s.moving)}
   else{s.model.position.set(s.x,0,s.y);let face=s.face||0;if(dp<5){face=Math.atan2(dyp,dxp)}s.fa=(s.fa===undefined?face:s.fa+(((face-s.fa+Math.PI*3)%(Math.PI*2))-Math.PI)*Math.min(1,dt*6));s.model.rotation.y=-s.fa;NPC.animate(s.model,pt,false)}
  }
@@ -185,14 +206,15 @@ function animate(dt){
 let last=0,running=false,fpsT=0,fpsN=0;
 function frame(t){
  if(!running)return;requestAnimationFrame(frame);
- if(document.hidden||!canvas.offsetParent)return;
- const dt=Math.min(.05,(t-last)/1000);last=t;
+ if(document.hidden||!canvas.offsetParent){last=t;E.resetMotion();return}
+ const dt=Math.max(0,Math.min(.25,(t-last)/1000));last=t;
  if(canvas.clientWidth!==S.cw||canvas.clientHeight!==S.ch){S.cw=canvas.clientWidth;S.ch=canvas.clientHeight;E.resize()}
- if(!E.paused&&!RS.isModal())update(dt);
+ if(!E.paused&&!RS.isModal())E.advance(dt);else E.resetMotion();
  animate(dt);
- const bob=(RS.S.settings.bob&&!RS.S.settings.reducedMotion&&E.moving)?Math.sin(time*9)*.035:0;
- const ey=P.sit?(P.sit.z+.8):(P.z+Phys.EYE+P.stepOff+bob);
- camera.position.set(P.x,ey,P.y);camera.rotation.y=-P.a-Math.PI/2;camera.rotation.x=P.pitch;
+ const bob=(RS.S.settings.bob&&!RS.S.settings.reducedMotion&&E.moving)?Math.sin(time*8)*.012:0;
+ const rp=E.renderPosition();
+ const ey=P.sit?(P.sit.z+.8):(rp.z+Phys.EYE+rp.stepOff+bob);
+ camera.position.set(rp.x,ey,rp.y);camera.rotation.y=-P.a-Math.PI/2;camera.rotation.x=P.pitch;
  renderer.render(scene,camera);
 }
 E.pick=function(){pickTarget();return E.target};

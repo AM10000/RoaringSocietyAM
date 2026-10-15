@@ -339,7 +339,7 @@ G.settings=function(){
  const w=el('div',{class:'settings'},[
   slider('Mouse / turn sensitivity','sens',.3,2.5,.1),slider('Text size','text',.9,1.6,.05,v=>Math.round(v*100)+'%'),slider('Master volume','vol',0,1,.05,v=>Math.round(v*100)+'%'),slider('Music volume','music',0,1,.05,v=>Math.round(v*100)+'%'),
   check('Captions for narration and audio','captions'),check('Reduced motion (no head bob, fades)','reducedMotion'),check('High-contrast interface','contrast'),check('Head bob','bob'),
-  el('label',{class:'set-row'},['Render quality ',el('select',{onchange:e=>{s.quality=+e.target.value;E.resize();RS.save()}},[el('option',{value:1,selected:s.quality===1?'selected':false},['Full resolution']),el('option',{value:0,selected:s.quality===0?'selected':false},['Fast (lower resolution)'])])]),
+  el('label',{class:'set-row'},['Render quality ',el('select',{onchange:e=>{s.quality=+e.target.value;E.resize();RS.save()}},[el('option',{value:1,selected:s.quality===1?'selected':false},['Smooth (recommended)']),el('option',{value:0,selected:s.quality===0?'selected':false},['Fast (lower resolution)'])])]),
   el('div',{class:'set-actions'},[el('button',{class:'btn ghost',onclick:()=>{if(confirm('Erase all saved progress?'))RS.reset()}},['Reset progress'])]),
   el('p',{class:'small'},['Colorblind-safe: markers use shape and color. Full keyboard support: Tab through menus, Enter to select, Esc to close.'])]);
  RS.overlay('Settings',w);

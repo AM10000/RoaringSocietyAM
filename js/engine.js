@@ -90,7 +90,7 @@ E.build=function(){
  W.layout();Pr.place();W.mesh();
  // chunk meshes
  const CH=W._chunks();
- Object.keys(CH).forEach(k=>{const ch=CH[k];if(!ch.n)return;const m=new THREE.Mesh(W.buildGeometry(ch),mat);m.matrixAutoUpdate=false;scene.add(m)});
+ Object.keys(CH).forEach(k=>{const ch=CH[k];if(!ch.n)return;const m=new THREE.Mesh(W.buildGeometry(ch),k==='water'?S.waterMat:mat);m.matrixAutoUpdate=false;scene.add(m)});
  // paintings
  Object.values(W.artSpots).forEach(sp=>{
   const i=sp.i;const c=document.createElement('canvas');c.width=AW*4;c.height=AH*4;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.scale(4,4);

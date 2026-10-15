@@ -30,3 +30,13 @@ This is a procedural 3D museum with photo-style materials; its geometry is not a
 ## Texture asset
 
 `assets/museum-materials.png` was created with the built-in image generation tool and is bundled locally. Its exact generation prompt is in `assets/museum-materials-prompt.txt`. Historical source imagery remains credited separately in each Source Card and has not been replaced by generated historical images.
+
+## Smooth movement and rendering
+
+The museum atlas is uploaded once. Fountain ripples use a separate small texture and an animated shader uniform, so water animation never reuploads the 4096px atlas. NPC details are combined into six animated meshes per character; visitors behind walls are not rendered. Only the two nearest chandelier lights are evaluated, and high-density displays use a bounded rendering resolution.
+
+Player physics advances at 120Hz with camera-position interpolation and frame-independent acceleration. Up to 250ms of normal frame delay is simulated instead of discarding movement time after 50ms. NPC routing and interaction checks run once per rendered frame, with at most one new visitor route per frame. Head bob is gentler.
+
+`tests/performance-check.cjs` verifies identical walking distance at 30/60/144 FPS and with a schedule containing 100ms stalls, six meshes per NPC, animated water without recurring texture uploads, two active gallery lights and bounded rendering resolution. Run it with the same Playwright environment variables as the main browser check.
+
+A short local headless Edge comparison at 1019x759 and pixel ratio 1 measured 686 versus 137 draw calls, and a maximum sampled frame interval of 187.4ms versus 7.4ms after the fix. These are measurements from that local run, not a guaranteed frame rate on every device.

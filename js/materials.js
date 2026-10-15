@@ -50,6 +50,9 @@ A.ready=new Promise(resolve=>{
  photo.onerror=()=>{console.warn('Museum material image unavailable; using local procedural fallback.');resolve()};
  photo.src='assets/museum-materials.png';
 });
-// Preserve the existing animated water while keeping its new atlas address.
-const animate=A.animate;A.animate=function(dt){if(!animate(dt))return false;const id=A.idx.water,px=id%A.COLS,py=Math.floor(id/A.COLS);x.drawImage(old,px*16,py*16,16,16,px*TS,py*TS,TS,TS);if(A.texture)A.texture.needsUpdate=true;return true};
+// Water animates in its own shader; the 4096px museum atlas stays on the GPU.
+A.waterCanvas=document.createElement('canvas');A.waterCanvas.width=A.waterCanvas.height=128;
+const water=A.waterCanvas.getContext('2d'),wash=water.createLinearGradient(0,0,128,128);wash.addColorStop(0,'#658f91');wash.addColorStop(1,'#375f65');water.fillStyle=wash;water.fillRect(0,0,128,128);
+for(let row=0;row<16;row++){water.beginPath();for(let xx=0;xx<=128;xx+=2){const yy=row*8+Math.sin(xx*.08+row)*2;xx?water.lineTo(xx,yy):water.moveTo(xx,yy)}water.strokeStyle='rgba(212,235,226,.16)';water.lineWidth=.7;water.stroke()}
+A.waterTime={value:0};A.animate=function(dt){A.waterTime.value+=dt;return false};
 })();
