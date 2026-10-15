@@ -202,3 +202,33 @@ h2.pix{font-size:clamp(1.9rem,3.5vw,2.8rem)}
 .source-card,th,td{border-width:1px}.source-card{border-color:#cec3ac;border-radius:2px}.gq{background:#33413a}
 @media(max-width:800px){.site-head{padding:.65rem 1rem}.hero{padding-top:3rem;padding-bottom:3rem;gap:2rem}.hero-art{margin:8px}#start-card .ov-card{padding:1.5rem;margin:1rem}#start-card h2{font-size:2rem}}
 @media(prefers-reduced-motion:reduce){.btn,.acard{transition:none}}
+
+/* One type system across website, controls, HUD and exhibit dialogs. */
+:root{--font-ui:"Libre Franklin",Arial,sans-serif;--text-size:calc(16px * var(--ui-scale))}
+body,body *{font-family:var(--font-ui)!important}
+body{font-size:var(--text-size)}
+button,input,select,textarea,.btn,.btn.big,.btn.sm,.link,.small,.lede,.eyebrow,.gnum,.card h3,.card p,.acard,.ai,.am,.badge,.v-gal,.credit,.source-card,.think,.related,.cite,.doc pre,.note,.chips-list li,.toast,th,td,.bib,.q-type,.q-reward,.qb-count,.q-obj,.quest,.floor,.stamp{font-size:var(--text-size)!important;line-height:1.55}
+h1,.hero h1{font-size:clamp(2.5rem,5vw,4rem);line-height:1.12;letter-spacing:-.025em}
+h2,h2.pix,.v-info h2,#start-card h2,.ov-head h2{font-size:calc(28px * var(--ui-scale));line-height:1.2;letter-spacing:-.02em}
+h3,.gq h3{font-size:calc(20px * var(--ui-scale));line-height:1.35}h4,h5,h6{font-size:var(--text-size)}
+.brand{font-size:calc(20px * var(--ui-scale));font-weight:600;letter-spacing:0}
+.hero .lede{font-size:var(--text-size)}.eyebrow{letter-spacing:.12em;font-weight:600}
+#nav{font-size:var(--text-size)}.site-head{padding:.8rem 1.5rem;flex-wrap:wrap}
+.hero{gap:2rem}.hero-art{max-width:100%}
+#hud,#banner,#prompt,#tracker,#bubble,#captions,.hud-btns .btn{font-size:var(--text-size);font-weight:400;line-height:1.55}
+#score{position:absolute;left:12px;top:12px;padding:.5rem .8rem;color:#f5ead3;background:#172622ed;border:1px solid #b79a65;font-weight:600}
+#tracker{top:65px;max-width:min(350px,35vw);max-height:55vh;overflow:auto;pointer-events:auto}
+#tracker .quest-location{margin-top:.35rem;color:#dbcbab;font-size:var(--text-size)}
+.quest-location{white-space:pre-line;color:#52604f;border-left:2px solid #b79a65;padding:.45rem .7rem;margin:.4rem 0 .6rem;font-size:var(--text-size);line-height:1.55;font-weight:400}
+.q-reward{border-top:1px solid #d8cfbc;padding-top:.5rem}.score-rules{padding:.8rem;background:#e8e2d3}
+#start-card{padding:1rem;background:#10221b99;backdrop-filter:none;overflow:auto;align-items:safe center}
+#start-card .ov-card{padding:1.6rem 2rem;max-width:730px;width:100%;max-height:94vh;overflow:auto;text-align:left}
+#start-card h2{margin:.5rem 0 1rem}#start-card p{margin:.7rem 0}.visit-steps{padding-left:1.4rem;margin:1rem 0}.visit-steps li{margin:.65rem 0}.visit-controls{padding:.8rem;background:#e8e2d3;border-left:2px solid #b79a65}
+.creator-credit{font-weight:600}.qb-tabs{flex-wrap:wrap}.viewer .v-info{overflow-wrap:anywhere}
+@media(max-width:800px){#tracker{max-width:calc(100vw - 150px);max-height:36vh}.mini-wrap canvas{width:110px;height:110px}.hud-btns{top:135px}.hero{grid-template-columns:1fr}#nav{gap:.35rem .65rem}#start-card .ov-card{padding:1rem}.ov-card{max-height:94vh}#banner{top:auto;bottom:165px;max-width:90vw}#score{max-width:calc(100vw - 140px)}}
+
+#start-card .ov-card{display:flex;flex-direction:column;overflow:hidden}
+.welcome-copy{overflow:auto;min-height:0;padding-right:.25rem}.welcome-actions{display:flex;flex-wrap:wrap;gap:.5rem;flex-shrink:0;padding-top:.8rem;border-top:1px solid #c9b58a}
+#start-card .welcome-actions .btn{display:inline-block;width:auto;margin:0;flex:1 1 auto;padding:.65rem .8rem}
+#start-card .eyebrow{color:#77613a}.visit-steps{line-height:1.55}
+@media(max-width:500px){.welcome-actions{flex-direction:column}#start-card .welcome-actions .btn{width:100%}}

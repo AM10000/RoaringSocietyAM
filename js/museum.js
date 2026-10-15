@@ -1,34 +1,13 @@
 /* Presentation only. Keep the historical data, floor plan and interactions intact. */
 (function(){
 'use strict';
-const A=window.Atlas,T=128,old=A.canvas,cv=document.createElement('canvas');
-cv.width=cv.height=T*A.COLS;const x=cv.getContext('2d');
-x.imageSmoothingEnabled=true;x.drawImage(old,0,0,cv.width,cv.height);
 let seed=1920;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
-function tile(name,paint){const id=A.idx[name];if(id===undefined)return;x.save();x.translate(id%A.COLS*T,Math.floor(id/A.COLS)*T);x.beginPath();x.rect(0,0,T,T);x.clip();paint();x.restore()}
-function grain(amount){for(let i=0;i<3000;i++){x.fillStyle=random()>.5?'rgba(255,255,255,'+amount+')':'rgba(0,0,0,'+amount+')';x.fillRect(random()*T,random()*T,1,1)}}
-function stone(base){x.fillStyle=base;x.fillRect(0,0,T,T);grain(.035);for(let i=0;i<7;i++){x.beginPath();let y=random()*T;x.moveTo(0,y);for(let k=0;k<=T;k+=4){y+=Math.sin(k*.08+i)*1.2+(random()-.5)*2;x.lineTo(k,y)}x.strokeStyle='rgba(94,83,67,.12)';x.lineWidth=i%3===0?1.5:.5;x.stroke()}x.strokeStyle='rgba(83,71,53,.22)';x.lineWidth=1;x.strokeRect(.5,.5,T-1,T-1)}
-['marble_a','marble_white','tile_white'].forEach(n=>tile(n,()=>stone('#e4dfd1')));
-tile('marble_b',()=>stone('#b8b2a5'));
-['plaza','plaza2','stone','plinth','sandstone'].forEach(n=>tile(n,()=>stone('#c8bdab')));
-['parq_a','parq_b','parq_dark','plank_floor','wood','wood_dark','wood_light','wood_v'].forEach(n=>tile(n,()=>{
- const dark=n.includes('dark'),vertical=n==='wood_v';x.fillStyle=dark?'#493526':'#866044';x.fillRect(0,0,T,T);if(vertical){x.translate(T,0);x.rotate(Math.PI/2)}
- for(let p=0;p<4;p++){const y=p*32;x.fillStyle=p%2?'rgba(0,0,0,.08)':'rgba(255,210,156,.06)';x.fillRect(0,y,T,32);for(let j=0;j<22;j++){x.beginPath();x.moveTo(0,y+j*1.45);x.bezierCurveTo(40,y+j*1.45-2,80,y+j*1.45+2,T,y+j*1.45);x.strokeStyle='rgba(32,18,9,'+(.035+random()*.08)+')';x.lineWidth=.5;x.stroke()}x.fillStyle='#39271d';x.fillRect(0,y,T,.8);x.fillRect((p%2)*64,y,1,32)}grain(.04);
-}));
-for(let g=0;g<=7;g++){
- if(g!==6&&g!==7)tile('wall_'+g,()=>{x.fillStyle=g===0?'#ded3bd':'#'+new THREE.Color(DATA.G[g].accent).lerp(new THREE.Color('#b8ab90'),.68).getHexString();x.fillRect(0,0,T,T);grain(.025);for(let k=0;k<T;k+=16){x.fillStyle='rgba(255,255,255,.035)';x.fillRect(k,0,1,T)}});
- tile('rug_'+g,()=>{x.fillStyle=g===0?'#642f34':'#'+new THREE.Color(DATA.G[g].accent).multiplyScalar(.48).getHexString();x.fillRect(0,0,T,T);grain(.09);x.strokeStyle='#ac8b59';x.lineWidth=1;for(const inset of [3,8])x.strokeRect(inset,inset,T-inset*2,T-inset*2);x.beginPath();x.moveTo(64,45);x.lineTo(83,64);x.lineTo(64,83);x.lineTo(45,64);x.closePath();x.stroke()});
-}
-A.canvas=cv;A.TS=T;
-// Water updates must address the enlarged atlas rather than the old 16px canvas.
-const animate=A.animate;
-A.animate=function(dt){if(!animate(dt))return false;const id=A.idx.water,px=id%A.COLS,py=Math.floor(id/A.COLS);x.drawImage(old,px*16,py*16,16,16,px*T,py*T,T,T);if(A.texture)A.texture.needsUpdate=true;return true};
 // Replace the original square interior columns at the same footprints.
 Props.columns=function(g){};
 const build=Engine.build;
 Engine.build=function(){build();const scene=Engine._.scene;
- const brass=new THREE.MeshStandardMaterial({color:0xb39559,metalness:.72,roughness:.3});
- const limestone=new THREE.MeshStandardMaterial({color:0xe3d6bd,roughness:.72});
+ const brass=new THREE.MeshStandardMaterial({color:0xd9c398,map:RS.museumMaps.brass,metalness:.65,roughness:.38});
+ const limestone=new THREE.MeshStandardMaterial({color:0xeee8dc,map:RS.museumMaps.stone,roughness:.62});
  const decorations=[];
  const bulb=new THREE.MeshStandardMaterial({color:0xffe4ad,emissive:0xffce85,emissiveIntensity:.65,roughness:.35});
  function add(geo,mat,px,py,pz){const m=new THREE.Mesh(geo,mat);m.position.set(px,py,pz);scene.add(m);decorations.push(m);return m}
@@ -59,6 +38,12 @@ Engine.build=function(){build();const scene=Engine._.scene;
   }
   const light=new THREE.PointLight(0xffdcaa,.5,17,2);light.position.set(px,7.7,pz);scene.add(light);
  }
+ // The makers’ signature is only discoverable inside the hidden Archive Stacks.
+ const [mx,my]=World.ORIGIN[6],c=document.createElement('canvas');c.width=1024;c.height=512;const ctx=c.getContext('2d');
+ ctx.fillStyle='#302d21';ctx.fillRect(0,0,1024,512);ctx.strokeStyle='#b9a172';ctx.lineWidth=4;ctx.strokeRect(16,16,992,480);ctx.fillStyle='#e8dbb6';ctx.textAlign='center';ctx.font='600 38px "Libre Franklin",Arial';ctx.fillText('THE MAKERS’ SIGNATURE',512,85);
+ ctx.font='32px "Libre Franklin",Arial';['Anish Mhaskar','Aarav Mishra','Manvi Mishra','Myra Mehrotra'].forEach((name,k)=>ctx.fillText(name,512,170+k*65));
+ const plaque=new THREE.Mesh(new THREE.PlaneGeometry(1.45,.725),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}));plaque.position.set(mx+2.8,1.65,my+4.58);plaque.rotation.y=Math.PI;scene.add(plaque);
+ const makers={id:'makers',kind:'station',gal:6,x:mx+2.8,y:my+4.45,zc:1.65,label:'Read the makers’ signature',pick:.55,reach:2.4,visible:!!RS.S.secretOpen[6],mesh:plaque};Engine.sprites.push(makers);Engine.stationSprites.makers=makers;plaque.visible=makers.visible;
  // Batch stationary details by material to keep gallery draw calls low.
  const batches=new Map();
  decorations.forEach(m=>{m.updateMatrix();const geo=(m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone());geo.applyMatrix4(m.matrix);let b=batches.get(m.material);if(!b){b={position:[],normal:[],uv:[]};batches.set(m.material,b)}for(const key of ['position','normal','uv']){const a=geo.getAttribute(key);if(a)for(const v of a.array)b[key].push(v)}scene.remove(m);geo.dispose()});

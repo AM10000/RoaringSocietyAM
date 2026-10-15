@@ -1,25 +1,32 @@
-# Roaring Society — museum visual update
+# Roaring Society
 
-This branch changes presentation while preserving the historical narrative, dialogue, quests, artifacts, gallery order, controls and saved progress format.
-
-## Visual changes
-- 128px procedural marble, timber, plaster and woven carpet tiles, with smooth texture sampling.
-- Lit architectural surfaces with computed normals, limestone columns, brass chandeliers and curved foliage.
-- Connected NPC shoulders and articulated limb geometry, round shoes, facial details and period clothing.
-- Ivory, forest green and brass interface with serif typography and sharper source displays.
-- Stationary decorative geometry grouped by material to reduce draw calls.
+A Three.js museum about social conflict and civil liberties in 1920s America. Historical narrative, source descriptions, dialogue and quest learning content remain in `js/data.js`.
 
 ## Run
-From this directory run `python -m http.server 8765` and visit http://localhost:8765. No install or build step is required.
+
+Run `python -m http.server 8765` from this directory, then open http://localhost:8765/#play-now. No application build step is required.
+
+## Visitor improvements
+
+1. One Libre Franklin typography system. Body copy, buttons, navigation and dialog text use the same 16px base size; headings use a consistent hierarchy. Text-size accessibility settings still apply.
+2. A 4096px atlas with photo-style marble, plaster, walnut and patinated metal, plus detailed shelves, papers, glazing and joinery. Surface roughness and metalness differ by material. Museum fog starts farther away and station labels replace floating pixel icons.
+3. Visitors plan routes around furniture using A*, check the full body width along every step and yield to visitors and the player.
+4. Every quest objective lists actual exhibit or station locations, including gallery, room, floor and artwork wall. Pinned quests point to their next unread source. Written activities explain where to study and how to answer in the Quest Book.
+5. Teleports select a nearby landing in the intended wing with body clearance and at least two directions to walk away. Saved positions are checked on load.
+6. All source viewers, activity dialogs and docent dialogs release pointer lock and clear held movement. Gameplay pauses while dialogs are open. Click the view to capture the mouse again.
+7. Secret-panel inspection requires close range and a small joinery target. Undiscovered doors do not have a distinctive minimap color or quest coordinate marker.
+8. A persistent HUD shows Curator Points: 25 per quest, 5 per new area/floor and 25 per hidden room. The optional makers' signature awards 20 bonus points. Rewards are paid once; old saved scores and completed quests are preserved.
+9. The welcome dialog gives a step-by-step visit plan. Its action buttons remain visible while directions scroll on smaller screens.
+10. Anish Mhaskar, Aarav Mishra, Manvi Mishra, and Myra Mehrotra are credited on the website and in-game credits. A physical signature plaque is hidden in the Archive Stacks.
 
 ## Validation
-- Loaded in headless Microsoft Edge without uncaught JavaScript errors.
-- 29 NPC models, 63 artworks and 44 quests instantiate.
-- Historical data, dialogue, simulations, progression and physics files remain unchanged.
-- Eight existing gallery teleport destinations were checked against the original checkout. The same six destinations overlap furniture in both versions (I, II, IV, V, Research and Synthesis). This pre-existing navigation issue is outside this visual-only update.
-- Screenshots reviewed for the entrance hall and character models. This is not a complete story playthrough or a mobile performance certification.
 
-## Practical limits
-The museum retains its original floor plan and much of its furniture geometry. Characters use procedural stylized geometry rather than scanned human models. Remaining legacy atlas tiles are smoothly enlarged; selected materials are repainted at higher resolution. The new lighting and smoother models increase GPU work. Historical photographs still depend on Wikimedia access; web fonts fall back to local serif and sans-serif fonts.
+`tests/browser-check.cjs` checks real pointer lock and release, consistent body/control typography, all nine teleport destinations and escape directions, thirty simulated seconds of visitor collision checks, location guidance for all 44 quests, secret-panel inspection range, scoring and duplicate prevention, save/reload behavior, existing-save migration, creator-plaque interaction and mobile overflow.
 
-Local branch: codex/museum-visual-redesign. Changes have not been pushed to GitHub.
+Run a local server first. With Playwright installed, run `node tests/browser-check.cjs`. Optional environment variables: `PLAYWRIGHT_MODULE` (module path), `BROWSER_PATH` (Chromium or Edge executable), `TEST_URL` (default localhost:8765), `TEST_OUTPUT` (default work/verification).
+
+This is a procedural 3D museum with photo-style materials; its geometry is not a photographic scan. Screenshots were reviewed at desktop and mobile sizes. Browser checks do not replace a complete story playthrough or testing on every mobile GPU.
+
+## Texture asset
+
+`assets/museum-materials.png` was created with the built-in image generation tool and is bundled locally. Its exact generation prompt is in `assets/museum-materials-prompt.txt`. Historical source imagery remains credited separately in each Source Card and has not been replaced by generated historical images.
