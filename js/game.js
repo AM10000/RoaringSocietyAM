@@ -18,15 +18,44 @@ RS.sfx=function(n){if(!audio())return;const t=AC.currentTime;
  else if(n==='step'){tone(90,t,.06,'triangle',.05)}
 };
 const CH=[[196,247,294,370],[220,277,330,415],[175,220,262,330],[196,247,294,392]]; // Gmaj7, Amaj7ish, F, G jazz-ish
-function startMusic(){if(!audio()||musicTimer||S.settings.music<=0)return;let step=0;
+/* Background music: recorded 1920s tracks play in a loop, quietly, for the whole visit. The volume follows the Music setting
+   (about 20% of full at the default). If a track cannot load, the built-in synth music below is used instead. */
+const TRACKS=['assets/music/whispering.mp3','assets/music/charleston-rag.mp3','assets/music/i-wanna-be-loved.mp3','assets/music/two-to-two.mp3','assets/music/wheres-that-band.mp3'];
+const BGM_LEVEL=.4;let bgm=null,bgmIdx=-1,bgmFailed=false;
+const bgmVol=()=>Math.max(0,Math.min(1,S.settings.music*BGM_LEVEL));
+function playBgm(){
+ if(bgm){bgm.volume=bgmVol();if(bgm.paused)bgm.play().catch(()=>{});return}
+ if(bgmIdx<0)bgmIdx=Math.floor(Math.random()*TRACKS.length);
+ const a=new Audio(TRACKS[bgmIdx]);a.volume=bgmVol();a.preload='auto';bgm=a;
+ a.onended=()=>{if(bgm===a){bgm=null;bgmIdx=(bgmIdx+1)%TRACKS.length;if(S.settings.music>0&&!$('#game').hidden)playBgm()}};
+ a.onerror=()=>{if(bgm===a){bgm=null;bgmFailed=true;startSynthMusic()}};
+ const p=a.play();if(p&&p.catch)p.catch(()=>{});
+}
+function startMusic(){if(S.settings.music<=0)return;if(!bgmFailed&&typeof Audio==='function'){try{playBgm();return}catch(e){bgmFailed=true}}startSynthMusic()}
+function startSynthMusic(){if(!audio()||musicTimer||S.settings.music<=0)return;let step=0;
  musicTimer=setInterval(()=>{if(!AC||AC.state!=='running')return;const t=AC.currentTime;const ch=CH[((step/8)|0)%4];const sw=(step%2)?0.08:0;
   tone(ch[0]/2,t+sw,.45,'triangle',.5,musicGain);if(step%2===0)tone(ch[step%4],t+sw,.4,'sine',.35,musicGain);if(step%4===3)tone(ch[(step+1)%4]*2,t+sw,.3,'sine',.2,musicGain);step++},300)}
-function stopMusic(){clearInterval(musicTimer);musicTimer=null}
-RS.setAudio=()=>{if(master)master.gain.value=S.settings.vol;if(musicGain)musicGain.gain.value=S.settings.music*.25;if(S.settings.music<=0)stopMusic();else if(!E.paused)startMusic()};
+function stopMusic(){clearInterval(musicTimer);musicTimer=null;if(bgm)bgm.pause()}
+RS.setAudio=()=>{if(RS._clip){if(S.settings.vol>0)RS._clip.volume=Math.min(1,S.settings.vol);else{RS._clip.pause();RS._clip=null}}if(master)master.gain.value=S.settings.vol;if(musicGain)musicGain.gain.value=S.settings.music*.25;if(bgm)bgm.volume=bgmVol();if(S.settings.music<=0)stopMusic();else if(!E.paused||(G.seenStart&&!$('#game').hidden))startMusic()};
 /* narration with captions */
-RS.narrate=function(text){
+RS.narrate=function(text,clip,onend){
  if(!text)return;const cap=$('#captions');clearTimeout(RS._capT);if(cap){cap.hidden=!S.settings.captions;if(S.settings.captions){cap.textContent=text;RS._capT=setTimeout(()=>{cap.hidden=true},Math.max(4000,text.length*70))}}
- try{if('speechSynthesis' in window&&S.settings.vol>0){speechSynthesis.cancel();speechSynthesis.resume();const u=new SpeechSynthesisUtterance(text);u.rate=1;u.volume=Math.min(1,S.settings.vol);RS._narration=u;u.onend=u.onerror=()=>{if(RS._narration===u)RS._narration=null};speechSynthesis.speak(u)}}catch(e){}
+ // Stop the previous recording before starting the next line.
+ try{if(RS._clip){const old=RS._clip;RS._clip=null;old.onended=old.onerror=null;old.pause()}}catch(e){}
+ if(!(S.settings.vol>0))return;
+ const tts=()=>{try{if('speechSynthesis' in window){speechSynthesis.cancel();speechSynthesis.resume();const u=new SpeechSynthesisUtterance(text);u.rate=1;u.volume=Math.min(1,S.settings.vol);RS._narration=u;u.onend=()=>{if(RS._narration===u)RS._narration=null;if(onend)onend()};u.onerror=()=>{if(RS._narration===u)RS._narration=null};speechSynthesis.speak(u)}}catch(e){}};
+ // Recorded voice: assets/voice/line-NN.mp3. If a clip is missing or blocked, the browser voice reads the same text.
+ if(clip&&typeof Audio==='function'){
+  try{
+   const a=new Audio('assets/voice/line-'+String(clip).padStart(2,'0')+'.mp3');a.volume=Math.min(1,S.settings.vol);a.rsText=text;RS._clip=a;
+   const fallback=()=>{if(RS._clip===a){RS._clip=null;tts()}};
+   a.onerror=fallback;a.onended=()=>{if(RS._clip===a){RS._clip=null;if(onend)onend()}};
+   try{if('speechSynthesis' in window)speechSynthesis.cancel()}catch(e){}
+   const p=a.play();if(p&&p.catch)p.catch(fallback);
+   return;
+  }catch(e){}
+ }
+ tts();
 };
 const INTRO={0:'Welcome to The Roaring Society. Gold frames hold primary sources, silver frames secondary sources, and green plaques hold evidence. Press T to teleport at any time.',
  1:'Gallery I. During the First World War, factory jobs in the North and oppression in the South set the Great Migration in motion. That movement sharpened racial conflict.',
@@ -43,6 +72,15 @@ const banner=$('#banner'),prompt_=$('#prompt'),cross=$('#cross'),tracker=$('#tra
 let fog=new Uint8Array(E.N*E.N);try{const f=RS.ls.get('rs-fog');if(f&&f.length===E.N*E.N)for(let i=0;i<f.length;i++)fog[i]=f.charCodeAt(i)-48}catch(e){}
 function saveFog(){let s='';for(let i=0;i<fog.length;i++)s+=fog[i];RS.ls.set('rs-fog',s)}
 let bannerT=0,narratedGallery=null;
+// Room lines play the first time each room is entered during a visit; the gallery intro still plays on gallery entry.
+const roomsHeard=new Set();
+function roomClip(g,room){const V=RS.VOICE;if(!V||!V.rooms||g===9)return 0;const list=V.rooms[g],c=list&&list[room],k=g+':'+room;if(!c||roomsHeard.has(k))return 0;roomsHeard.add(k);return c}
+function cue(k){const V=RS.VOICE;if(V&&V.events&&V.events[k])RS.narrate(V.text[V.events[k]],V.events[k])}
+let cardCued=false;
+RS.on('credits.start',()=>{try{if(RS._clip){RS._clip.pause();RS._clip=null}if('speechSynthesis' in window)speechSynthesis.cancel()}catch(e){}stopMusic()});
+RS.on('credits.end',()=>{if(S.settings.music>0&&G.seenStart&&!$('#game').hidden)startMusic()});
+RS.on('quest.complete',()=>cue('quest'));RS.on('secret',()=>cue('secret'));
+RS.on('artwork.viewed',()=>{if(!cardCued&&S.seen.length===1){cardCued=true;cue('card')}});
 function showBanner(t,acc){banner.textContent=t;banner.style.setProperty('--acc',acc);banner.classList.add('show');clearTimeout(bannerT);bannerT=setTimeout(()=>banner.classList.remove('show'),3500)}
 RS.on('zone',z=>{
  const g=z.g;
@@ -55,7 +93,9 @@ RS.on('zone',z=>{
  // preload neighbours
  const nb={1:[0,2],2:[1,3],3:[2,4],4:[3,5],5:[4]}[g]||[];nb.forEach(n=>n>0&&E.loadGallery(n));
  // Speak once per gallery entry; room changes and in-gallery teleports stay quiet.
- if(g!==narratedGallery){narratedGallery=g;RS.narrate(INTRO[g])}
+ const V=RS.VOICE||{},rc=roomClip(g,z.room);
+ if(g!==narratedGallery){narratedGallery=g;RS.narrate(INTRO[g],V.intro&&V.intro[g],rc?()=>{if(E.zoneG===g&&E.zoneRoom===z.room)RS.narrate(V.text[rc],rc)}:undefined)}
+ else if(rc)RS.narrate(V.text[rc],rc);
  RS.save();RS.emit('zone.entered',z);
 });
 
@@ -366,7 +406,7 @@ G.help=function(){
  const t=el('table',{class:'ctl'});rows.forEach(r=>t.append(el('tr',{},[el('th',{},[r[0]]),el('td',{},[r[1]])])));
  RS.overlay('Controls',el('div',{class:'prose'},[t,el('p',{},['Gold frames are primary sources, silver frames are secondary sources, and green plaques are evidence panels.'])]));
 };
-G.exit=function(){narratedGallery=null;E.paused=true;saveAll();$('#game').hidden=true;document.body.classList.remove('playing');document.exitPointerLock&&document.exitPointerLock();stopMusic();window.scrollTo(0,0)};
+G.exit=function(){narratedGallery=null;roomsHeard.clear();cue('farewell');E.paused=true;saveAll();$('#game').hidden=true;document.body.classList.remove('playing');document.exitPointerLock&&document.exitPointerLock();stopMusic();window.scrollTo(0,0)};
 function saveAll(){E.savePos();saveFog();RS.save()}
 
 /* ---------------- boot ---------------- */

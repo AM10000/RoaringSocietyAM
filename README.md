@@ -46,3 +46,15 @@ A short local headless Edge comparison at 1019x759 and pixel ratio 1 measured 68
 The original gallery introduction plays once on entry to a gallery, by walking or teleporting. Moving between rooms or floors, or teleporting inside the same gallery, does not restart it. Leaving and re-entering the gallery plays it again. Master volume and captions are respected; old saved intro flags do not suppress a new gallery visit.
 
 `tests/narration-check.cjs` captures speech-synthesis requests to check old-save startup, all nine destinations, quiet transitions within a gallery, walking between galleries, repeat-entry behavior and muted/caption behavior. It also verifies that the Bibliography Wall renders the planned book titles in italics rather than displaying literal HTML tags. No audio device is required for these checks.
+
+## Recorded voice
+
+Narration uses recorded clips in `assets/voice/line-NN.mp3` (lines 1-50). `js/voice.js` maps each moment to its clip: gallery intros (1-9), Radio Room readings (10-14), room introductions (15-46) and cues for quest complete, hidden room, first Source Card and leaving the museum (47-50). Captions show the same text. If a clip is missing or the browser blocks playback, the browser's built-in voice reads the same text instead. Room lines play the first time each room is entered during a visit, and after a gallery intro finishes. Delete the `rooms` entry in `js/voice.js` to switch room lines off.
+
+`tests/voice-check.cjs` checks that all 50 clips load, each moment plays the right clip, the browser-voice fallback and volume 0. The Entrance Hall has only one detected room, so lines 16-18 (Visitor Directory, Museum Store, Ticket Desk) are recorded but not yet triggered.
+
+## Background music and credits video
+
+Five 1920s recordings in `assets/music/` play in a loop for the whole visit, starting on a random track. Volume is the Music setting times 0.4 (about 20% of full at the default of 0.5), so it stays quiet under the narration. Music pauses while the credits video plays. If a track cannot load, the built-in synth music plays instead. Edit `TRACKS` and `BGM_LEVEL` in `js/game.js` to change the playlist or loudness. Tracks: Whiteman, "Whispering"; Eubie Blake, "Charleston Rag"; Broadway Nitelites, "I Wanna Be Loved"; "2 to 2"; Alexander, "Where's That Band".
+
+Easter egg: after the final quest (all five gallery stamps and the Curator's Argument), the Curator's Argument dialog shows "One more thing…", which opens the credits video (`assets/video/credits.mp4`, a 720x1280 web copy of the original). It can be replayed from the Curator's Office certificate screen. The video has no captions.
